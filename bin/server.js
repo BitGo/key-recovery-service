@@ -1,20 +1,22 @@
 var restify = require('restify');
-var cks = require('../lib/cks');
+var CKS = require('../lib/cks');
+
+var config = require('../config');
+var cks = CKS(config);
 
 var server = restify.createServer({
-  name: 'Cold Key Service',
+  name: config.name,
 });
 
-function getxpub(req, res, next) {
-  var index = parseInt(req.params.index);
-  var xpub = cks.derivexpub(index);
-  res.send({xpub: xpub});
-  return next();
-};
+server.get('/', function(req, res, next) {
+  res.send(config.name);
+  next();
+});
 
-server.get('/xpub/:index', getxpub);
+server.get('/derive/:index', cks.routeDerive.bind(cks));
 
-var port = 8080;
+var host = config.host;
+var port = config.port;
 server.listen(port);
-console.log('listening on ' + port);
+console.log("listening http://" + host + ":" + port);
 
