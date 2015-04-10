@@ -48,6 +48,24 @@ describe('server', function() {
       });
     });
 
+    it('should not return an invalid path', function() {
+      return request(server)
+      .get('/' + 'n' + path)
+      .then(function(res) {
+        should.exist(res.body.error);
+        res.body.error.should.equal('invalid path');
+      });
+    });
+
+    it('should not return an invalid path', function() {
+      return request(server)
+      .get('/' + 'n' + path)
+      .then(function(res) {
+        should.exist(res.body.error);
+        res.body.error.should.equal('invalid path');
+      });
+    });
+
   });
 
 });
