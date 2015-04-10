@@ -11,7 +11,7 @@
   "devDependencies": {
     "chai": "^2.2.0",
     "mocha": "^2.2.4",
-    "supertest": "^0.15.0"
+    "q-supertest": "^1.0.0"
   },
   "dependencies": {
     "bitcoinjs-lib": "^1.5.6",
