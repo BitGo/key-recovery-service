@@ -7,6 +7,8 @@ var server = restify.createServer({
   name: config.name,
 });
 
+server.use(restify.bodyParser());
+
 server.get('/', function(req, res, next) {
   res.send(config.name);
   next();
