@@ -22,6 +22,58 @@ describe('CKS', function() {
 
   });
 
+  describe('routeGetM', function() {
+
+    it('should not get an invalid path', function(done) {
+      var req = {
+        params: {
+          path: "n/0"
+        }
+      };
+      var res = {
+        send: function(obj) {
+          obj.error.should.equal('invalid path');
+        }
+      };
+      cks.routeGetM(req, res, function() {
+        done();
+      });
+    });
+
+    it('should not get an invalid path', function(done) {
+      var req = {
+        params: {
+          path: "m.0"
+        }
+      };
+      var res = {
+        send: function(obj) {
+          obj.error.should.equal('invalid path');
+        }
+      };
+      cks.routeGetM(req, res, function() {
+        done();
+      });
+    });
+
+    it('should not get an invalid path', function(done) {
+      var req = {
+        params: {
+          path: "m/"
+        }
+      };
+      var res = {
+        send: function(obj) {
+          obj.error.should.equal('invalid path');
+        }
+      };
+      cks.routeGetM(req, res, function() {
+        done();
+      });
+    });
+
+  });
+
   describe('deriveFromPath', function() {
     
     it('should derive the 0th xpub correctly', function() {
@@ -44,6 +96,29 @@ describe('CKS', function() {
       (function() {
         cks.deriveFromPath("m/" + (Math.pow(2, 31) + 1));
       }).should.throw('Could not derive hardened child key');
+    });
+
+  });
+
+  describe('randomPath', function() {
+
+    it('should derive a random path', function() {
+      cks.randomPath().substr(0, 2).should.equal('m/');
+    });
+
+    it('should allow deriving a deterministic path', function() {
+      var buf = new Buffer(4);
+      buf.fill(0);
+      var opts = {buf: [buf, buf, buf, buf, buf]};
+      cks.randomPath(opts).should.equal('m/0/0/0/0/0');
+    });
+
+    it('should zero out the first bit in the optional buffers', function() {
+      var buf = new Buffer(4);
+      buf.fill(0);
+      buf[0] = 0x80;
+      var opts = {buf: [buf, buf, buf, buf, buf]};
+      cks.randomPath(opts).should.equal('m/0/0/0/0/0');
     });
 
   });

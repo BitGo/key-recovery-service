@@ -1,8 +1,21 @@
 var request = require('q-supertest');
 var should = require('chai').should();
+var config = require('../config');
 var server = require('../lib/server');
 
 describe('server', function() {
+
+  describe('GET /', function() {
+
+    it('should return the name', function() {
+      return request(server)
+      .get('/')
+      .then(function(res) {
+        res.body.should.equal(config.name);
+      });
+    });
+
+  });
   
   describe('POST /m', function() {
     
@@ -45,6 +58,22 @@ describe('server', function() {
         res.body.xpub.should.equal(xpub);
         should.exist(res.body.email);
         res.body.email.should.equal(email);
+      });
+    });
+
+    it('should not return the master xpub', function() {
+      return request(server)
+      .get('/m')
+      .then(function(res) {
+        res.body.message.should.equal('GET is not allowed');
+      });
+    });
+
+    it('should not return the master xpub', function() {
+      return request(server)
+      .get('/m/')
+      .then(function(res) {
+        res.body.message.should.equal('invalid path');
       });
     });
 
