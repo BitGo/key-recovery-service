@@ -4,13 +4,14 @@
   "description": "Cold key service.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "./node_modules/.bin/mocha"
   },
   "author": "Ryan X. Charles <ryan@bitgo.com>",
   "license": "MIT",
   "devDependencies": {
     "chai": "^2.2.0",
-    "mocha": "^2.2.4"
+    "mocha": "^2.2.4",
+    "supertest": "^0.15.0"
   },
   "dependencies": {
     "bitcoinjs-lib": "^1.5.6",
