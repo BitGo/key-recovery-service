@@ -4,18 +4,6 @@ var server = require('../lib/server');
 
 describe('server', function() {
   
-  describe('GET /derive/:index', function() {
-    
-    it('should return the correct xpub for the 0th index', function() {
-      return request(server)
-      .get('/derive/0')
-      .then(function(res) {
-        res.body.xpub.should.equal('xpub6AfzaTPTLCnsBW1nPqW2pGweQUz8NEcWHaoQEu1jQtc35Rq8tbMQPgxo92gnYrbcGDbnaCSvyFNX1mZv2YTxroYU3ivK4WtTm9VcjADFtUM');
-      });
-    });
-
-  });
-
   describe('POST /m', function() {
     
     it('should return a new path', function() {

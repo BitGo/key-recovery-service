@@ -12,31 +12,10 @@ describe('CKS', function() {
     masterxpub: masterxpub
   });
 
-  describe('derive', function() {
+  describe('deriveFromPath', function() {
     
     it('should derive the 0th xpub correctly', function() {
-      cks.derive(0).should.equal('xpub69Kk9nrHX5qoe1Vx7eC4aiFSH6tTPghhkC278qz4sCBumPiNn6CTEYNugh5HD7qVPiHtRYE9wosY96K3DEcefGK1gn54fhgvnhV4BPQtUxi');
-    });
-
-  });
-
-  describe('routeDerive', function() {
-
-    it('should return the 0th xpub correctly', function(done) {
-      var json;
-      var req = {
-        params: {index: '0'}
-      };
-      var res = {
-        send: function(obj) {
-         json = obj;
-        }
-      };
-      var next = function() {
-        json.xpub.should.equal('xpub69Kk9nrHX5qoe1Vx7eC4aiFSH6tTPghhkC278qz4sCBumPiNn6CTEYNugh5HD7qVPiHtRYE9wosY96K3DEcefGK1gn54fhgvnhV4BPQtUxi');
-        done();
-      };
-      cks.routeDerive(req, res, next);
+      cks.deriveFromPath('m/0').should.equal('xpub69Kk9nrHX5qoe1Vx7eC4aiFSH6tTPghhkC278qz4sCBumPiNn6CTEYNugh5HD7qVPiHtRYE9wosY96K3DEcefGK1gn54fhgvnhV4BPQtUxi');
     });
 
   });
