@@ -31,8 +31,9 @@ describe('CKS', function() {
         }
       };
       var res = {
-        send: function(obj) {
-          obj.error.should.equal('invalid path');
+        send: function(errnum, err) {
+          errnum.should.equal(400);
+          err.toString().should.equal('Error: invalid path');
         }
       };
       cks.routeGetM(req, res, function() {
@@ -47,8 +48,9 @@ describe('CKS', function() {
         }
       };
       var res = {
-        send: function(obj) {
-          obj.error.should.equal('invalid path');
+        send: function(errnum, err) {
+          errnum.should.equal(400);
+          err.toString().should.equal('Error: invalid path');
         }
       };
       cks.routeGetM(req, res, function() {
@@ -63,8 +65,9 @@ describe('CKS', function() {
         }
       };
       var res = {
-        send: function(obj) {
-          obj.error.should.equal('invalid path');
+        send: function(errnum, err) {
+          errnum.should.equal(400);
+          err.toString().should.equal('Error: invalid path');
         }
       };
       cks.routeGetM(req, res, function() {

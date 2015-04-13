@@ -1,9 +1,27 @@
 var request = require('q-supertest');
 var should = require('chai').should();
 var config = require('../config');
-var server = require('../lib/server');
+
+config.dbname = "cold-key-service-test";
+
+var server = require('../lib/server')(config);
+var mongoose;
 
 describe('server', function() {
+
+  before(function(done) {
+    mongoose = require('../lib/db')(config);
+    mongoose.connection.on('error', function(err) {
+      throw new Error(err);
+    });
+    mongoose.connection.once('open', function() {
+      done();
+    });
+  });
+
+  after(function() {
+    mongoose.connection.db.dropDatabase();
+  });
 
   describe('GET /', function() {
 
@@ -73,17 +91,18 @@ describe('server', function() {
       return request(server)
       .get('/m/')
       .then(function(res) {
-        res.body.message.should.equal('invalid path');
+        should.exist(res.error);
+        res.error.toString().substr(0, 17).should.equal('Error: cannot GET');
       });
     });
 
     it('should not return an invalid path', function() {
-      var invalidpath = '/n' + path;
+      var invalidpath = '/w' + path;
       return request(server)
       .get(invalidpath)
       .then(function(res) {
-        should.exist(res.body.error);
-        res.body.error.should.equal('invalid path');
+        should.exist(res.error);
+        res.error.toString().substr(0, 17).should.equal('Error: cannot GET');
       });
     });
 
