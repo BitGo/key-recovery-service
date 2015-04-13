@@ -8,9 +8,10 @@ describe('CKS', function() {
   var hdnode = HDNode.fromSeedBuffer(seed);
   var masterxprv = hdnode.toBase58();
   var masterxpub = hdnode.neutered().toBase58();
-  var cks = CKS({
+  var config = {
     masterxpub: masterxpub
-  });
+  };
+  var cks = CKS(config);
 
   describe('CKS', function() {
     
@@ -22,13 +23,34 @@ describe('CKS', function() {
 
   });
 
+  describe('routePostM', function() {
+
+    it('should should return an error is the save fails', function(done) {
+      var Modelxpub = function() {
+        this.save = function(callback) {
+          return callback(true);
+        }
+      };
+      var cks = CKS(config, Modelxpub);
+      var req = {params: []};
+      var res = {
+        send: function(errnum, err) {
+          errnum.should.equal(400);
+          err.toString().should.equal('Error: error creating xpub');
+        }
+      };
+      cks.routePostM(req, res, function() {
+        done();
+      });
+    });
+
+  });
+
   describe('routeGetM', function() {
 
     it('should not get an invalid path', function(done) {
       var req = {
-        params: {
-          path: "n/0"
-        }
+        params: ["n", "0"]
       };
       var res = {
         send: function(errnum, err) {
@@ -41,11 +63,15 @@ describe('CKS', function() {
       });
     });
 
-    it('should not get an invalid path', function(done) {
-      var req = {
-        params: {
-          path: "m.0"
+    it('should not get a path that does not exist in the db', function(done) {
+      var Modelxpub = {
+        findOne: function(query, callback) {
+          return callback(null, null);
         }
+      };
+      var cks = CKS(config, Modelxpub);
+      var req = {
+        params: ["m", "words"]
       };
       var res = {
         send: function(errnum, err) {
@@ -58,16 +84,20 @@ describe('CKS', function() {
       });
     });
 
-    it('should not get an invalid path', function(done) {
-      var req = {
-        params: {
-          path: "m/"
+    it('should not get a path if there is a db error', function(done) {
+      var Modelxpub = {
+        findOne: function(query, callback) {
+          return callback(true);
         }
+      };
+      var cks = CKS(config, Modelxpub);
+      var req = {
+        params: ["m", "/0/1/2/3/4"]
       };
       var res = {
         send: function(errnum, err) {
           errnum.should.equal(400);
-          err.toString().should.equal('Error: invalid path');
+          err.toString().should.equal('Error: error getting xpub');
         }
       };
       cks.routeGetM(req, res, function() {

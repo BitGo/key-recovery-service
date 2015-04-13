@@ -79,17 +79,28 @@ describe('server', function() {
       });
     });
 
-    it('should not return the master xpub on /m', function() {
+    it('should not return a path that has not been created', function() {
+      var path = "m/0/1/2/3/4";
       return request(server)
-      .get('/m')
+      .get(path)
+      .then(function(res) {
+        res.error.toString().substr(0, 17).should.equal('Error: cannot GET');
+      });
+    });
+
+    it('should not return the master xpub on /m', function() {
+      var path = "/m"
+      return request(server)
+      .get(path)
       .then(function(res) {
         res.body.message.should.equal('GET is not allowed');
       });
     });
 
     it('should not return the master xpub on /m/', function() {
+      var path = "/m/";
       return request(server)
-      .get('/m/')
+      .get(path)
       .then(function(res) {
         should.exist(res.error);
         res.error.toString().substr(0, 17).should.equal('Error: cannot GET');
@@ -97,9 +108,9 @@ describe('server', function() {
     });
 
     it('should not return an invalid path', function() {
-      var invalidpath = '/w' + path;
+      var path = '/w/0/1/2/3/4';
       return request(server)
-      .get(invalidpath)
+      .get(path)
       .then(function(res) {
         should.exist(res.error);
         res.error.toString().substr(0, 17).should.equal('Error: cannot GET');
