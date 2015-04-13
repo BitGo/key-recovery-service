@@ -68,7 +68,7 @@ describe('server', function() {
       });
     });
     
-    it('should the path after creating it', function() {
+    it('should get the path after creating it', function() {
       return request(server)
       .get('/' + path)
       .then(function(res) {
