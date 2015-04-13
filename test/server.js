@@ -61,7 +61,7 @@ describe('server', function() {
       });
     });
 
-    it('should not return the master xpub', function() {
+    it('should not return the master xpub on /m', function() {
       return request(server)
       .get('/m')
       .then(function(res) {
@@ -69,7 +69,7 @@ describe('server', function() {
       });
     });
 
-    it('should not return the master xpub', function() {
+    it('should not return the master xpub on /m/', function() {
       return request(server)
       .get('/m/')
       .then(function(res) {
@@ -78,17 +78,9 @@ describe('server', function() {
     });
 
     it('should not return an invalid path', function() {
+      var invalidpath = '/n' + path;
       return request(server)
-      .get('/' + 'n' + path)
-      .then(function(res) {
-        should.exist(res.body.error);
-        res.body.error.should.equal('invalid path');
-      });
-    });
-
-    it('should not return an invalid path', function() {
-      return request(server)
-      .get('/' + 'n' + path)
+      .get(invalidpath)
       .then(function(res) {
         should.exist(res.body.error);
         res.body.error.should.equal('invalid path');
