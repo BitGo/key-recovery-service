@@ -1,8 +1,8 @@
-var CKS = require('../lib/cks');
+var KRS = require('../lib/krs');
 var HDNode = require('../lib/hdnode');
 var should = require('chai').should();
 
-describe('CKS', function() {
+describe('KRS', function() {
   var seed = new Buffer(512 / 8);
   seed.fill(0); // the seed for testing purposes is all 0s
   var hdnode = HDNode.fromSeedBuffer(seed);
@@ -11,13 +11,13 @@ describe('CKS', function() {
   var config = {
     masterxpub: masterxpub
   };
-  var cks = CKS(config);
+  var krs = KRS(config);
 
-  describe('CKS', function() {
+  describe('KRS', function() {
     
     it('should not accept invalid configuration', function() {
       (function() {
-        CKS({masterxpub: 'ypub'});
+        KRS({masterxpub: 'ypub'});
       }).should.throw('masterxpub must start with "xpub"');
     });
 
@@ -31,7 +31,7 @@ describe('CKS', function() {
           return callback(true);
         }
       };
-      var cks = CKS(config, Modelxpub);
+      var krs = KRS(config, Modelxpub);
       var req = {params: []};
       var res = {
         send: function(errnum, err) {
@@ -39,7 +39,7 @@ describe('CKS', function() {
           err.toString().should.equal('Error: error creating xpub');
         }
       };
-      cks.routePostM(req, res, function() {
+      krs.routePostM(req, res, function() {
         done();
       });
     });
@@ -58,7 +58,7 @@ describe('CKS', function() {
           err.toString().should.equal('Error: invalid path');
         }
       };
-      cks.routeGetM(req, res, function() {
+      krs.routeGetM(req, res, function() {
         done();
       });
     });
@@ -69,7 +69,7 @@ describe('CKS', function() {
           return callback(null, null);
         }
       };
-      var cks = CKS(config, Modelxpub);
+      var krs = KRS(config, Modelxpub);
       var req = {
         params: ["m", "words"]
       };
@@ -79,7 +79,7 @@ describe('CKS', function() {
           err.toString().should.equal('Error: invalid path');
         }
       };
-      cks.routeGetM(req, res, function() {
+      krs.routeGetM(req, res, function() {
         done();
       });
     });
@@ -90,7 +90,7 @@ describe('CKS', function() {
           return callback(true);
         }
       };
-      var cks = CKS(config, Modelxpub);
+      var krs = KRS(config, Modelxpub);
       var req = {
         params: ["m", "/0/1/2/3/4"]
       };
@@ -100,7 +100,7 @@ describe('CKS', function() {
           err.toString().should.equal('Error: error getting xpub');
         }
       };
-      cks.routeGetM(req, res, function() {
+      krs.routeGetM(req, res, function() {
         done();
       });
     });
@@ -110,24 +110,24 @@ describe('CKS', function() {
   describe('deriveFromPath', function() {
     
     it('should derive the 0th xpub correctly', function() {
-      cks.deriveFromPath('m/0').should.equal('xpub69Kk9nrHX5qoe1Vx7eC4aiFSH6tTPghhkC278qz4sCBumPiNn6CTEYNugh5HD7qVPiHtRYE9wosY96K3DEcefGK1gn54fhgvnhV4BPQtUxi');
+      krs.deriveFromPath('m/0').should.equal('xpub69Kk9nrHX5qoe1Vx7eC4aiFSH6tTPghhkC278qz4sCBumPiNn6CTEYNugh5HD7qVPiHtRYE9wosY96K3DEcefGK1gn54fhgvnhV4BPQtUxi');
     });
 
     it('should not derive invalid paths', function() {
       (function() {
-        cks.deriveFromPath("word");
+        krs.deriveFromPath("word");
       }).should.throw('invalid path');
       (function() {
-        cks.deriveFromPath("m/word'");
+        krs.deriveFromPath("m/word'");
       }).should.throw('invalid path');
       (function() {
-        cks.deriveFromPath("m/word'");
+        krs.deriveFromPath("m/word'");
       }).should.throw('invalid path');
       (function() {
-        cks.deriveFromPath("m/" + (Math.pow(2, 32) + 1));
+        krs.deriveFromPath("m/" + (Math.pow(2, 32) + 1));
       }).should.throw('value is out of bounds');
       (function() {
-        cks.deriveFromPath("m/" + (Math.pow(2, 31) + 1));
+        krs.deriveFromPath("m/" + (Math.pow(2, 31) + 1));
       }).should.throw('Could not derive hardened child key');
     });
 
@@ -136,14 +136,14 @@ describe('CKS', function() {
   describe('randomPath', function() {
 
     it('should derive a random path', function() {
-      cks.randomPath().substr(0, 2).should.equal('m/');
+      krs.randomPath().substr(0, 2).should.equal('m/');
     });
 
     it('should allow deriving a deterministic path', function() {
       var buf = new Buffer(4);
       buf.fill(0);
       var opts = {buf: [buf, buf, buf, buf, buf]};
-      cks.randomPath(opts).should.equal('m/0/0/0/0/0');
+      krs.randomPath(opts).should.equal('m/0/0/0/0/0');
     });
 
     it('should zero out the first bit in the optional buffers', function() {
@@ -151,7 +151,7 @@ describe('CKS', function() {
       buf.fill(0);
       buf[0] = 0x80;
       var opts = {buf: [buf, buf, buf, buf, buf]};
-      cks.randomPath(opts).should.equal('m/0/0/0/0/0');
+      krs.randomPath(opts).should.equal('m/0/0/0/0/0');
     });
 
   });
