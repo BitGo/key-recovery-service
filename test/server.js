@@ -2,7 +2,7 @@ var request = require('q-supertest');
 var should = require('chai').should();
 var config = require('../config');
 
-config.dbname = "cold-key-service-test";
+config.dbname = "key-recovery-service-test";
 
 var server = require('../lib/server')(config);
 var mongoose;
