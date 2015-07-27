@@ -2,21 +2,21 @@ var mongoose = require('mongoose');
 var mongooseQ = require('mongoose-q')(mongoose);
 var _ = require('lodash');
 
-var xpubSchema = new mongoose.Schema({
+var keySchema = new mongoose.Schema({
   path: {type: String},
   xpub: {type: String},
   userEmail: {type: String},
   custom: {}
 });
 
-xpubSchema.methods = {
+keySchema.methods = {
   toJSON: function() {
     return _.pick(this, ['path', 'xpub', 'userEmail', 'custom']);
   }
 };
 
-xpubSchema.index({path: 1}, {unique: true});
-xpubSchema.index({xpub: 1}, {unique: true});
-xpubSchema.index({email: 1});
+keySchema.index({path: 1}, {unique: true});
+keySchema.index({xpub: 1}, {unique: true});
+keySchema.index({email: 1});
 
-module.exports = mongoose.connection.model('xpub', xpubSchema);
+module.exports = mongoose.connection.model('key', keySchema);

@@ -17,6 +17,7 @@ module.exports = function() {
 
   app.post('/key', utils.promiseWrapper(krs.provisionKey));
   app.get('/key/:userEmail/:xpub', utils.promiseWrapper(krs.validateKey));
+  app.post('/recover', utils.promiseWrapper(krs.requestRecovery));
 
   return app;
 };

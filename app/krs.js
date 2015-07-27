@@ -5,6 +5,7 @@ var _ = require('lodash');
 
 var utils = require('./utils');
 var Key = require('./models/key');
+var RecoveryRequest = require('./models/recoveryrequest');
 
 if (process.config.masterxpub.substr(0, 4) !== 'xpub') {
   throw new Error('masterxpub must start with "xpub"');
@@ -18,15 +19,16 @@ exports.provisionKey = function(req) {
     throw utils.ErrorResponse(400, 'userEmail required');
   }
 
+  var custom = req.body.custom || {};
+  custom.created = new Date();
+
   var path = exports.randomPath();
   var xpub = exports.deriveFromPath(path);
   var key = new Key({
     path: path,
     xpub: xpub,
     userEmail: userEmail,
-    custom: {
-      created: new Date()
-    }
+    custom: custom
   });
 
   return key.saveQ();
@@ -46,6 +48,34 @@ exports.validateKey = function(req) {
       throw utils.ErrorResponse(404, 'key and username combination not found');
     }
     return key;
+  });
+};
+
+exports.requestRecovery = function(req) {
+  var xpub = req.body.xpub;
+  var userEmail = req.body.userEmail;
+  var transactionHex = req.body.transactionHex;
+  var inputs = req.body.inputs;
+  var custom = req.body.custom;
+
+  if (_.isEmpty(xpub) || _.isEmpty(userEmail) || _.isEmpty(transactionHex) || _.isEmpty(inputs)) {
+    throw utils.ErrorResponse(400, 'xpub, userEmail, transactionHex and inputs required');
+  }
+
+  var recoveryRequest = new RecoveryRequest({
+    xpub: xpub,
+    userEmail: userEmail,
+    transactionHex: transactionHex,
+    inputs: inputs,
+    custom: custom
+  });
+
+  return recoveryRequest.saveQ()
+  .then(function(result) {
+    return {
+      id: result._id,
+      created: result.created
+    }
   });
 };
 
