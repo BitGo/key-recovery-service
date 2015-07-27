@@ -1,5 +1,5 @@
 var should = require('chai').should();
-var HDNode = require('../lib/hdnode');
+var HDNode = require('../../app/lib/hdnode');
 
 describe('HDNode', function() {
 

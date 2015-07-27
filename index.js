@@ -1,1 +1,1 @@
-module.exports = require('./lib/krs');
+module.exports = require('./app/krs');

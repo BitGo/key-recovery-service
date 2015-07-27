@@ -1,13 +1,13 @@
-var config = require('../config');
-var mongoose = require('../lib/db')(config);
-var server = require('../lib/server')(config);
+process.config = require('../config');
 
-var host = config.host;
-var port = config.port;
+var db = require('../app/db');
+var server = require('../app/app')();
 
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'database connection error:'));
-db.once('open', function () {
+var host = process.config.host;
+var port = process.config.port;
+
+db.connection.on('error', console.error.bind(console, 'database connection error: '));
+db.connection.once('open', function () {
   server.listen(port);
   console.log("listening http://" + host + ":" + port);
 });
