@@ -1,7 +1,10 @@
 var testutils = require('./testutils');
 var request = require('supertest-as-promised');
+var assert = require('assert');
 var should = require('chai').should();
 var server = require('../app/app')();
+
+var RecoveryRequest = require('../app/models/recoveryrequest');
 
 describe('Application Server', function() {
   var agent;
@@ -98,6 +101,63 @@ describe('Application Server', function() {
       .query({ userEmail: userEmail })
       .then(function(res) {
         res.status.should.eql(404);
+      });
+    });
+  });
+
+  describe('Request recovery', function() {
+    var path;
+    var xpub;
+    var userEmail;
+
+    before(function() {
+      return agent
+      .post('/key')
+      .send({userEmail: 'test@example.com'})
+      .then(function(res) {
+        res.status.should.eql(200);
+        path = res.body.path;
+        xpub = res.body.xpub;
+        userEmail = res.body.userEmail;
+      });
+    });
+
+    it('success: recovery request stored in db', function() {
+      var transactionHex = "010000000176f1169fc7252d173b539b72be897408348ff37d72c236424e4026e057bc9cf60000000000ffffffff01607be660190000001976a914dbb0c5b54a9347cb1ee82dbded41e2302ad5360488ac00000000";
+      return agent
+      .post('/recover')
+      .send(
+        {
+          userEmail: userEmail,
+          xpub: xpub,
+          transactionHex: transactionHex,
+          inputs: [{
+            "chainPath": "/0/1645",
+            "redeemScript": "522103cdfebbd122a9fa9ba405efead022b24055273a12bffd7e5af1fc6e5bfdbe8dd32102688027f13b00377ae19da43f3474f598ade81b967a365d3ee7d34867f2eba5732102c12f3d5579458b8d8a08fcfd0f47c0b8c1dffe29fcc20fc84f33ef02e28c39a353ae"
+          },
+          {},
+          {
+            "chainPath": "/0/8397",
+            "redeemScript": "522103147f08b4017d5207470aee49d888cf2a7ae49306a916147475378ebd2dab661d21029f6ad03f8933b8b83ca54246fc47f0e7d41dccac9629e0602433cee2c02f664421026b432d8b41d81338a6b3c4fd4a492cd0b9485a97deb7f68502176b03c6bb17de53ae"
+          }],
+          "custom": { "message" : "need help!" }
+        }
+      )
+      .then(function(res) {
+        res.status.should.eql(200);
+        res.body.should.have.property('created');
+        res.body.should.have.property('id');
+        res.body.id.should.not.eql('');
+        return RecoveryRequest.findOneQ({_id: res.body.id});
+      })
+      .then(function(res) {
+        assert(res);
+        res.userEmail.should.eql(userEmail);
+        res.xpub.should.eql(xpub);
+        res.transactionHex.should.eql(transactionHex);
+        res.inputs.length.should.eql(3);
+        res.inputs[0].chainPath.should.eql("/0/1645");
+        res.custom.message.should.contain('help');
       });
     });
   });
