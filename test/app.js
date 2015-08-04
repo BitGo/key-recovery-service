@@ -6,8 +6,8 @@ var server = require('../app/app')();
 describe('Application Server', function() {
   var agent;
   before(function() {
-    testutils.clearDatabase();
     agent = request.agent(server);
+    return testutils.clearDatabaseQ();
   });
 
   describe('GET /', function() {
