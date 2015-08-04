@@ -35,7 +35,7 @@ exports.provisionKey = function(req) {
 };
 
 exports.validateKey = function(req) {
-  var userEmail = req.params.userEmail;
+  var userEmail = req.query && req.query.userEmail;
   var xpub = req.params.xpub;
 
   if (_.isEmpty(userEmail) || _.isEmpty(xpub)) {

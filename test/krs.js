@@ -42,8 +42,8 @@ describe('KRS Controller', function() {
         throw new Error("should not succeed");
       })
       .catch(function(error) {
-        error.status.should.eql(404);
-        error.result.should.eql('key and username combination not found');
+        error.status.should.eql(400);
+        error.result.should.eql('userEmail and xpub required');
       });
     });
   });

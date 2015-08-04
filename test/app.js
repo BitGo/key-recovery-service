@@ -63,7 +63,8 @@ describe('Application Server', function() {
 
     it('invalid: user specified but not xpub', function() {
       return agent
-      .get('/key/' + userEmail)
+      .get('/key/')
+      .query({ userEmail: userEmail })
       .then(function(res) {
         res.status.should.not.eql(200);
       });
@@ -71,7 +72,8 @@ describe('Application Server', function() {
 
     it('should validate the xpub after creating it', function() {
       return agent
-      .get('/key/' + userEmail + '/' + xpub)
+      .get('/key/' + xpub)
+      .query({ userEmail: userEmail })
       .then(function(res) {
         res.status.should.eql(200);
 
@@ -83,7 +85,8 @@ describe('Application Server', function() {
 
     it('should not validate the xpub with incorrect userEmail', function() {
       return agent
-      .get('/key/' + 'otherEmail@mail.com' + '/' + xpub)
+      .get('/key/' + xpub)
+      .query({ userEmail: 'otherEmail@mail.com' })
       .then(function(res) {
         res.status.should.eql(404);
       });
@@ -91,11 +94,11 @@ describe('Application Server', function() {
 
     it('should not validate the xpub with incorrect xpub', function() {
       return agent
-      .get('/key/' + userEmail + '/' + 'xpub6J3LqcP2o8s2QhczVUUUWVKgRJpH594zeLt4AZ3Uvy5t73rtvKeEkhmUY4cauXbmHreNMGXbR6QRYZeqs1U77j4cmaW5JQa1zpEKdS9Uivn')
+      .get('/key/xpub6J3LqcP2o8s2QhczVUUUWVKgRJpH594zeLt4AZ3Uvy5t73rtvKeEkhmUY4cauXbmHreNMGXbR6QRYZeqs1U77j4cmaW5JQa1zpEKdS9Uivn')
+      .query({ userEmail: userEmail })
       .then(function(res) {
         res.status.should.eql(404);
       });
     });
   });
-
 });
