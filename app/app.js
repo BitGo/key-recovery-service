@@ -5,10 +5,21 @@ var morgan = require('morgan');
 var utils = require('./utils');
 var krs = require('./krs');
 
-module.exports = function() {
+module.exports = function(args) {
   var app = express();
 
-  app.use(morgan('combined'));
+  // Set up morgan for logging, with optional logging into a file
+  if (args.logfile) {
+    // create a write stream (in append mode)
+    var accessLogPath = path.resolve(args.logfile);
+    var accessLogStream = fs.createWriteStream(accessLogPath, {flags: 'a'});
+    console.log('Log location: ' + accessLogPath);
+    // setup the logger
+    app.use(morgan('combined', {stream: accessLogStream}))
+  } else {
+    app.use(morgan('combined'));
+  }
+  
   app.use(bodyParser.urlencoded({extended: false, limit: '1mb'}));
   app.use(bodyParser.json({limit: '1mb'}));
 
