@@ -1,6 +1,7 @@
 var HDNode = require('./lib/hdnode');
 var crypto = require('crypto');
 var assert = require('assert');
+var mongoose = require('mongoose');
 var _ = require('lodash');
 
 var utils = require('./utils');
@@ -70,7 +71,17 @@ exports.requestRecovery = function(req) {
     custom: custom
   });
 
-  return recoveryRequest.saveQ()
+  return Key.findOneQ({userEmail: userEmail, xpub: xpub})
+  .then(function(key) {
+    if (!key) {
+      // no matching key found, return a fake result to throw spammers off
+      return {
+        _id: mongoose.Types.ObjectId().toString(),
+        created: new Date()
+      }
+    }
+    return recoveryRequest.saveQ();
+  })
   .then(function(result) {
     return {
       id: result._id,
