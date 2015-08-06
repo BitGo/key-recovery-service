@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>Bitcoin Recovery request initiated on {{:servicename}} for {{:useremail}}</title>
+</head>
+<body>
+<h1 style="text-align: center;">Bitcoin recovery event requested by {{:useremail}}</h1>
+<h3>Admin of {{:servicename}},</h3>
+<p>
+    You are receiving this email because a recovery request has been initiated by a user. <br/>
+</p>
+<p>
+    <span style="line-height: 1.5em;">Backup key to be utilized to withdraw Bitcoin: <span style="line-height: 1.5em; text-decoration: underline"><strong><span style="color: rgb(0, 0, 205);">{{:xpub}}</span></strong>.</span></span><br/>
+    <span style="line-height: 1.5em;">User custom message: <span style="line-height: 1.5em; text-decoration: underline">{{:message}}</span></span>
+</p>
+<h3><strong>What to do</strong></h3>
+<p>
+    <span style="line-height: 1.5em;">Please get in touch with the user to verify their identity. <br/>
+        It is up to you to make sure that it is their intent to make the recovery</span>
+    <br/>
+</p>
+<h3><strong>Next steps</strong></h3>
+<p><span style="line-height: 1.5em;">If the identity of the user is verified:</span></p>
+<ol>
+    <li>Save the attachment of this file and bring it to the offline computer with the private key. </li>
+    <li>Use the signtransaction feature with the private key to recover the user's funds.</li>
+    <li>Use a common pushtx endpoint such as <a href="https://blockchain.info/pushtx">https://blockchain.com/pushtx</a> to send the transaction out to the network.</li>
+</ol>
+<p>
+    <span style="line-height: 1.5em;">Regards,<br/></span>
+    Your KRS service
+</p>
+</body>
+</html>

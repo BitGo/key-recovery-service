@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>Bitcoin Recovery request initiated on {{:servicename}} using your backup key</title>
+</head>
+<body>
+<h1 style="text-align: center;">Respond to authorize Bitcoin recovery request</h1>
+<h3>Hello,</h3>
+<p>
+    You are receiving this email because a recovery request has been initiated using a public key associated with your email.
+</p>
+<p>
+    <span style="line-height: 1.5em;">Backup key to be utilized to withdraw Bitcoin: <span style="line-height: 1.5em; text-decoration: underline"><strong><span style="color: rgb(0, 0, 205);">{{:xpub}}</span></strong>.</span></span><br/>
+    <span style="line-height: 1.5em;">Custom message: <span style="line-height: 1.5em; text-decoration: underline">{{:message}}</span></span>
+</p>
+<h3><strong>What will happen</strong></h3>
+<p>
+    <span style="line-height: 1.5em;">Once the correct owner of the backup key has been verified by {{:servicename}}, we will wait for up to 24 hours before signing and broadcasting the recovery transaction. <br/>
+        <strong><span style="color: rgb(255, 20, 20);">Funds from your BitGo account will be sent out irrevocably on the Bitcoin blockchain</strong></span>.</span>
+    <br/>
+</p>
+<h3><strong>Next steps</strong></h3>
+<p><span style="line-height: 1.5em;">Please proceed as follows:</span></p>
+<ol>
+    <li>If you <strong>DID NOT</strong> initiate this recovery, please send an email to <a href="mailto:{{:adminemail}}">{{:adminemail}}</a> with the subject <strong>"DO NOT RECOVER"</strong> to let us know you wish to lock the account pending further validation. If you do not send an email, the recovery will not be authorized to continue. </li>
+    <li>If you <strong>DID</strong> initiate this recovery, please send an email to <a href="mailto:{{:adminemail}}">{{:adminemail}}</a> including documentation that will help us to verify your identity and intent to make the recovery. </li>
+</ol>
+<p>Visit us at <a href="{{:serviceurl}}">{{:serviceurl}}</a> for more information. </p>
+<p>
+    <span style="line-height: 1.5em;">Regards,<br/></span>
+    {{:servicename}}
+</p>
+</body>
+</html>

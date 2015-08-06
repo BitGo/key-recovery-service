@@ -1,0 +1,37 @@
+<html>
+<head>
+    <title>Your backup recovery key has been provisioned on {{:servicename}}</title>
+</head>
+<body>
+<h1 style="text-align: center;">{{:servicename}} will keep your backup key safe.</h1>
+<h3>Hello,</h3>
+<p>
+    You are receiving this email because a wallet has been created for you on BitGo.
+    BitGo uses a trust-less 2 of 3 wallet model where only you have control of the funds secured on the blockchain.
+    You hold the user key and co-sign with BitGo for transactions.
+    <span style="line-height: 1.5em;">{{:servicename}} will hold your final backup key for you in cold storage to be used under the following circumstances:</span>
+</p>
+<ul>
+    <li>You misplace your recovery keycard and forget your BitGo password. </li>
+    <li>BitGo becomes inaccessible.</li>
+</ul>
+<p>Please visit us at <a href="{{:serviceurl}}">{{:serviceurl}}</a> for more information. </p>
+<h3><strong>The Backup Key Generated</strong></h3>
+<p>
+    <span style="line-height: 1.5em;">The backup public key generated for you is:</span>
+    <span style="line-height: 1.5em; text-decoration: underline"><strong><span style="color: rgb(0, 0, 205);">{{:xpub}}</span></strong>.</span>
+    <br/>
+</p>
+<h3><strong>Enhanced Security</strong></h3>
+<p><span style="line-height: 1.5em;">We recommend you take the following steps to enhance the security of your wallet:</span></p>
+<ol>
+    <li>Verify the value of your public key above with that on the backup section of your BitGo keycard. This validates that the key was not changed in transit. </li>
+    <li>Upgrade your backup verification requirements by contacting us at <a href="mailto:{{:adminemail}}">{{:adminemail}}</a> and sending us more documentation to associate your identity with. We will require this documentation in the case of a recovery event. </li>
+</ol>
+<br/>
+<p>
+    <span style="line-height: 1.5em;">Regards,<br/></span>
+    {{:servicename}}
+</p>
+</body>
+</html>
