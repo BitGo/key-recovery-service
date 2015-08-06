@@ -50,11 +50,11 @@ describe('KRS Controller', function() {
 
   describe('deriveFromPath', function() {
     it('should derive the 0th xpub correctly', function() {
-      KRS.deriveFromPath('m/0').should.equal('xpub6AfzaTPTLCnsBW1nPqW2pGweQUz8NEcWHaoQEu1jQtc35Rq8tbMQPgxo92gnYrbcGDbnaCSvyFNX1mZv2YTxroYU3ivK4WtTm9VcjADFtUM');
+      KRS.deriveFromPath('m/0').should.equal('xpub68zFDNY18ZjuK1MS4cqRB2akBYcRVePsA3mWqM9cvnGronp4ALE4A22uccbAxb7cA5vqsoJ9z81oS3erczJLst67rzSUb9DePfP3jdG1E2t');
     });
 
     it('should derive the up to 4 levels correctly', function() {
-      KRS.deriveFromPath('m/50/50/50/50').should.equal('xpub6GJrTAP2YkzYNV2vbLoBwoeiaAJ4zB36NUQM6X7dgrJmN4tfpip4tpckMEa3nAs7F1qHkZxZWJdnDfVrDE1yER6ZPAnpuajDZTv67zuvwBy');
+      KRS.deriveFromPath('m/50/50/50/50').should.equal('xpub6EoBtLPkTEZ2oqetZaBiSxseRxA8bbYkHxC1tL96bYexCjNTwK32PnowGhwyXcWKxoYBftP2xL9uh8e65yb6CaBGwvpikbtp5riYSr7XbeA');
     });
 
     it('should not derive invalid paths', function() {

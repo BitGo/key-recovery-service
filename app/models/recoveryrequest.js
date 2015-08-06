@@ -3,6 +3,7 @@ var mongooseQ = require('mongoose-q')(mongoose);
 var _ = require('lodash');
 
 var recoverySchema = new mongoose.Schema({
+  masterxpub: {type: String},
   xpub: {type: String},
   userEmail: {type: String},
   transactionHex: {type: String},

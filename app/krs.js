@@ -15,8 +15,6 @@ if (process.config.masterxpub.substr(0, 4) !== 'xpub') {
   throw new Error('masterxpub must start with "xpub"');
 }
 
-var masterHDNode = HDNode.fromBase58(process.config.masterxpub);
-
 exports.provisionKey = function(req) {
   var userEmail = req.body.userEmail;
   if (!userEmail) {
@@ -35,13 +33,12 @@ exports.provisionKey = function(req) {
     path: path,
     xpub: xpub,
     userEmail: userEmail,
-    custom: custom
+    custom: custom,
+    masterxpub: process.config.masterxpub
   });
 
-  var key;
   return key.saveQ()
   .then(function(result) {
-    key = result;
     return utils.sendMailQ(
       userEmail,
       "Information about your backup key",
@@ -146,7 +143,9 @@ exports.requestRecovery = function(req) {
         _id: mongoose.Types.ObjectId().toString(),
         created: new Date()
       };
+      return result;
     }
+    recoveryRequest.masterxpub = key.masterxpub;
     return Q.all([recoveryRequest.saveQ(), sendEmailToAdmin(), sendEmailToUser()])
     .spread(function(saveResult, emailToAdminResult, emailToUserResult) {
       result = saveResult;
@@ -161,6 +160,7 @@ exports.requestRecovery = function(req) {
 };
 
 exports.deriveFromPath = function(path) {
+  var masterHDNode = HDNode.fromBase58(process.config.masterxpub);
   return masterHDNode.deriveFromPath(path).toBase58();
 };
 

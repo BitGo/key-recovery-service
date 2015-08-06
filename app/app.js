@@ -6,6 +6,7 @@ var utils = require('./utils');
 var krs = require('./krs');
 
 module.exports = function(args) {
+  args = args || {};
   var app = express();
 
   // Set up morgan for logging, with optional logging into a file

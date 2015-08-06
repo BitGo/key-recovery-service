@@ -1,5 +1,6 @@
 process.config = require('../config');
 process.config.dbname = "key-recovery-service-test";
+process.config.mail = undefined;
 
 var mongoose = require('../app/db');
 var Q = require('q');

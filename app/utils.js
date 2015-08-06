@@ -66,7 +66,7 @@ exports.promiseWrapper = function(promiseRequestHandler) {
 exports.sendMailQ = function(toEmail, subject, template, templateParams, attachments) {
   // If mail not configured, don't send
   if (!process.config.mail) {
-    return false;
+    return Q();
   }
 
   // setup e-mail data with unicode symbols
