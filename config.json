@@ -1,7 +1,18 @@
 {
   "name": "Friendly Key Backup Service",
+  "serviceurl": "http://keyrecoveryservice.yourdomain.com/",
   "host": "localhost",
   "port": 6833,
-  "masterxpub": "xpub6854DPMNt7KdLB8nXCtCTdtiFky9mTp1Qo3usWoxEYh7P3ZFRrG1bqo4vJNGET1fzWttoLCPABygDU96p8RAT6gd2pWnL1ZkeWeBTueF47K",
-  "dbname": "key-recovery-service"
+  "adminemail": "benchan@bitgo.com",
+  "masterxpub": "xpub661MyMwAqRbcGnYJHEwr8CPAr6hSXC8xiMjxQi39EKyfBD99rJb7kQVqce2EFDTZutdaR2rb92xpULJqPjarYCsybvzY9AfQCkkEii6XE54",
+  "dbname": "key-recovery-service",
+  "mail": {
+    "fromemail": "XPub.XYZ <keyserver@xpub.xyz>",
+    "host": "smtp.mailgun.org",
+    "port": 25,
+    "auth": {
+      "user": "postmaster@sandbox76422cdc4433464496a6ec2fc047483b.mailgun.org",
+      "pass": "c977ad811d6ca46cd24e59238abb4e78"
+    }
+  }
 }

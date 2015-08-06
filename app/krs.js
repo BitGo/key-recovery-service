@@ -2,6 +2,9 @@ var HDNode = require('./lib/hdnode');
 var crypto = require('crypto');
 var assert = require('assert');
 var mongoose = require('mongoose');
+var moment = require('moment');
+var validator = require('validator');
+var Q = require('q');
 var _ = require('lodash');
 
 var utils = require('./utils');
@@ -19,6 +22,9 @@ exports.provisionKey = function(req) {
   if (!userEmail) {
     throw utils.ErrorResponse(400, 'userEmail required');
   }
+  if (!validator.isEmail(userEmail)) {
+    throw utils.ErrorResponse(400, 'email invalid');
+  }
 
   var custom = req.body.custom || {};
   custom.created = new Date();
@@ -32,7 +38,29 @@ exports.provisionKey = function(req) {
     custom: custom
   });
 
-  return key.saveQ();
+  var key;
+  return key.saveQ()
+  .then(function(result) {
+    key = result;
+    return utils.sendMailQ(
+      userEmail,
+      "Information about your backup key",
+      "newkeytemplate",
+      {
+        xpub: xpub,
+        servicename: process.config.name,
+        serviceurl: process.config.serviceurl,
+        adminemail: process.config.adminemail,
+        useremail: userEmail
+      }
+    )
+    .catch(function(e) {
+      throw utils.ErrorResponse(503, "Problem sending email");
+    });
+  })
+  .then(function() {
+    return key;
+  });
 };
 
 exports.validateKey = function(req) {
@@ -71,22 +99,64 @@ exports.requestRecovery = function(req) {
     custom: custom
   });
 
+  var sendEmailToUser = function() {
+    return utils.sendMailQ(
+      userEmail,
+      "Bitcoin Recovery request initiated on {{:servicename}} using your backup key",
+      "recoveryusertemplate",
+      {
+        xpub: xpub,
+        servicename: process.config.name,
+        serviceurl: process.config.serviceurl,
+        adminemail: process.config.adminemail,
+        useremail: userEmail,
+        message: custom && custom.message
+      }
+    );
+  };
+
+  var sendEmailToAdmin = function() {
+    return utils.sendMailQ(
+      process.config.adminemail,
+      "Bitcoin Recovery request initiated on {{:servicename}} using your backup key",
+      "recoveryadmintemplate",
+      {
+        xpub: xpub,
+        servicename: process.config.name,
+        serviceurl: process.config.serviceurl,
+        useremail: userEmail,
+        message: custom && custom.message
+      },
+      // The attachments
+      [
+        {
+          filename: 'recovery_' + xpub + '_' + moment().format('YYYYMDHm'),
+          content: JSON.stringify(recoveryRequest)
+        }
+      ]
+    );
+  };
+
+  var result;
   return Key.findOneQ({userEmail: userEmail, xpub: xpub})
   .then(function(key) {
     if (!key) {
       // no matching key found, return a fake result to throw spammers off
-      return {
+      result = {
         _id: mongoose.Types.ObjectId().toString(),
         created: new Date()
-      }
+      };
     }
-    return recoveryRequest.saveQ();
+    return Q.all([recoveryRequest.saveQ(), sendEmailToAdmin(), sendEmailToUser()])
+    .spread(function(saveResult, emailToAdminResult, emailToUserResult) {
+      result = saveResult;
+    });
   })
-  .then(function(result) {
+  .then(function() {
     return {
       id: result._id,
       created: result.created
-    }
+    };
   });
 };
 

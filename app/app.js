@@ -19,7 +19,7 @@ module.exports = function(args) {
   } else {
     app.use(morgan('combined'));
   }
-  
+
   app.use(bodyParser.urlencoded({extended: false, limit: '1mb'}));
   app.use(bodyParser.json({limit: '1mb'}));
 
