@@ -32,6 +32,9 @@ module.exports = function(args) {
   app.post('/key', utils.promiseWrapper(krs.provisionKey));
   app.get('/key/:xpub', utils.promiseWrapper(krs.validateKey));
   app.post('/recover', utils.promiseWrapper(krs.requestRecovery));
+  app.get('/recover', function(req, res) { res.sendfile('public/recover_bitgo.html'); });
+
+  app.use(express.static('public'));
 
   return app;
 };

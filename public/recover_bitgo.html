@@ -1,0 +1,282 @@
+<html>
+<head>
+  <title>Recover your BitGo wallet</title>
+  <script src="/js/bitcoinjs-lib.js"></script>
+  <script src="/js/sjcl.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<script>
+  var network = bitcoin.networks.bitcoin;
+  var ADDRESS_LOOKAHEAD = 20;
+
+  var keys = [];
+  var addresses = {};
+  var unspents = [];
+
+  var appendLog = function(text) {
+    $('#console').val($('#console').val() + "\n" + text);
+    $('#console').scrollTop($('#console')[0].scrollHeight - $('#console').height());
+  };
+
+  var deriveKeys = function(keyArray, index) {
+    var results = [];
+    keyArray.forEach(function(k) {
+      results.push(k.derive(index));
+    });
+    return results;
+  };
+
+  var createMultiSigAddress = function(keyArray)  {
+    var publicKeys = [];
+    keyArray.forEach(function(k) {
+      publicKeys.push(k.pubKey);
+    });
+
+    var redeemScript = bitcoin.scripts.multisigOutput(2, publicKeys);
+    var scriptHashScript = bitcoin.scripts.scriptHashOutput(redeemScript.getHash());
+    var address = bitcoin.Address.fromOutputScript(scriptHashScript, network);
+    address.redeemScript = redeemScript;
+    return address;
+  };
+
+  var setKeyCardInputDisableProperties = function(state) {
+    $("#boxa").prop('disabled', state);
+    $("#passphrase").prop('disabled', state);
+    $("#boxb").prop('disabled', state);
+    $("#boxc").prop('disabled', state);
+    $("#btnStartRecovery").prop('disabled', state);
+  };
+
+  var setRecoveryRequestInputDisableProperties = function(state) {
+    $("#email").prop('disabled', state);
+    $("#btnSendRecoveryRequest").prop('disabled', state);
+  };
+
+  var startRecovery = function() {
+    var userKey = $('#boxa').val();
+    var backupXpub = $('#boxb').val();
+    var bitgoXpub = $('#boxc').val();
+
+    setKeyCardInputDisableProperties(true);
+    $('#console').val('Starting recovery.');
+
+    // Validate the user key
+    try {
+      var userHDNode = bitcoin.HDNode.fromBase58(userKey);
+      keys.push(userHDNode);
+      appendLog("Successfully parsed user xprv with xpub: " + userHDNode.neutered().toBase58());
+      return true;
+    } catch (e) {
+      try {
+        userKey = sjcl.decrypt($('#passphrase').val(), $('#boxa').val());
+        userHDNode = bitcoin.HDNode.fromBase58(userKey);
+        keys.push(userHDNode);
+        appendLog("Successfully decrypted and parsed user xprv with xpub: " + userHDNode.neutered().toBase58());
+      } catch (e) {
+        console.dir(e);
+        appendLog("Failed to decrypt user key with passphrase - try again!");
+        return setKeyCardInputDisableProperties(false);
+      }
+    }
+
+    // Validate the backup and bitgo xpubs as xpubs
+    try {
+      var backupHDNode = bitcoin.HDNode.fromBase58(backupXpub);
+      keys.push(backupHDNode);
+      appendLog("Successfully parsed backup xpub: " + backupXpub);
+    } catch (e) {
+      appendLog("Failed to parse backup xpub!");
+      return setKeyCardInputDisableProperties(false);
+    }
+
+    try {
+      var bitgoHDNode = bitcoin.HDNode.fromBase58(bitgoXpub);
+      keys.push(bitgoHDNode);
+      appendLog("Successfully parsed bitgo xpub: " + bitgoXpub);
+    } catch (e) {
+      appendLog("Failed to parse bitgo xpub!");
+      return setKeyCardInputDisableProperties(false);
+    }
+
+    var unspents = collectUnspents(keys);
+    // console.dir(unspents);
+
+    var result = {a:{b:5}};
+    // appendLog(JSON.stringify(result, null, '\t'));
+
+    setRecoveryRequestInputDisableProperties(false);
+  };
+
+  var collectUnspents = function(keys) {
+    // BitGo's key derivation paths are /0/0/0/i for user-generated addresses and /0/0/1/i for change adddresses.
+    // Derive these top level paths first for performance reasons
+    var keys_0_0 = deriveKeys(deriveKeys(keys, 0), 0);
+    var keys_0_0_0 = deriveKeys(keys_0_0, 0);
+    var keys_0_0_1 = deriveKeys(keys_0_0, 1);
+
+    var unspents = [];
+
+    // We want to get the wallet id, which is the first /0/0/0/0.
+    var walletAddress = createMultiSigAddress(deriveKeys(keys_0_0_0, 0));
+    appendLog("The wallet ID detected was: " + walletAddress.toBase58Check());
+    appendLog("Now starting unspents collection. ");
+
+    var queryBlockchainUnspents = function(keyArray, index) {
+      var lookupThisBatch = [];
+      for(var i=0; i<ADDRESS_LOOKAHEAD; i++) {
+        var derivedKeys = deriveKeys(keyArray, i);
+
+        var address = createMultiSigAddress(derivedKeys);
+        var addressBase58 = address.toBase58Check();
+        appendLog("Trying address: " + addressBase58);
+        lookupThisBatch.push(addressBase58);
+
+        address.userKey = derivedKeys[0];
+        addresses[addressBase58] = address;
+      }
+
+      var url = "http://tbtc.blockr.io/api/v1/address/unspent/" + lookupThisBatch.join(",");
+      appendLog("URL: " + url);
+      var unspentsThisBatch = JSON.parse($.ajax({
+        type: "GET",
+        url: url,
+        cache: false,
+        async: false,
+      }).responseText);
+      appendLog(JSON.stringify(unspentsThisBatch, null, '\t'))
+    };
+
+    queryBlockchainUnspents(keys_0_0_0, 0);
+  };
+
+  var sendRecoveryRequest = function() {
+    setRecoveryRequestInputDisableProperties(true);
+    // mock this first
+    var params = { "xpub": $('#boxb').val(),
+      "userEmail": $('#email').val(),
+      "transactionHex": "010000000176f1169fc7252d173b539b72be897408348ff37d72c236424e4026e057bc9cf60000000000ffffffff01607be660190000001976a914dbb0c5b54a9347cb1ee82dbded41e2302ad5360488ac00000000",
+      "inputs": [
+        {
+          "chainPath": "/0/1645",
+          "redeemScript": "522103cdfebbd122a9fa9ba405efead022b24055273a12bffd7e5af1fc6e5bfdbe8dd32102688027f13b00377ae19da43f3474f598ade81b967a365d3ee7d34867f2eba5732102c12f3d5579458b8d8a08fcfd0f47c0b8c1dffe29fcc20fc84f33ef02e28c39a353ae"
+        },
+        {},
+        {
+          "chainPath": "/0/8397",
+          "redeemScript": "522103147f08b4017d5207470aee49d888cf2a7ae49306a916147475378ebd2dab661d21029f6ad03f8933b8b83ca54246fc47f0e7d41dccac9629e0602433cee2c02f664421026b432d8b41d81338a6b3c4fd4a492cd0b9485a97deb7f68502176b03c6bb17de53ae"
+        }
+      ],
+      "custom": { "message" : $('#message').val() }
+    };
+    appendLog("Sending recovery request to KRS");
+    var recoveryResponse = JSON.parse($.ajax({
+      type: "POST",
+      data: JSON.stringify(params),
+      dataType: "json",
+      url: "https://keyvault.io/recovery",
+      cache: false,
+      async: false
+    }).responseText);
+    appendLog(JSON.stringify(recoveryResponse, null, '\t'));
+  }
+</script>
+<div class="jumbotron jumbotron-sm">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12 col-lg-12">
+        <h1 class="h1">
+          BitGo Wallet Recovery
+        </h1>
+        <h3 class="h3">
+          This page is hosted on the KRS and can initiate wallet recovery should BitGo be inaccessible.
+        </h1>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <form>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="well well-sm">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="boxa">
+                  User Private Key (Box A on BitGo Keycard)</label>
+                <input type="text" class="form-control" id="boxa" placeholder="The user key is an encrypted string or an unencrypted xprv" required="required" />
+              </div>
+              <div class="form-group">
+                <label for="passphrase">
+                  Passphrase to decrypt Box A</label>
+                <input type="password" class="form-control" id="passphrase" required="required" />
+              </div>
+              <div class="form-group">
+                <label for="boxb">
+                  Backup Key (Box B on BitGo Keycard)</label>
+                <input type="text" class="form-control" id="boxb" placeholder="The backup public key is a string like xpub6GRJ9DCvBqTAZsAi27TJFYVxL1TzqyAkMfNbQieiBNZWhEVmGxQAorMnNqoUAgK2Sjm3JP8naHu2eRQmu6Uz6MAeDY4uE8GV5aybLkCqcrR" required="required" />
+              </div>
+              <div class="form-group">
+                <label for="boxc">
+                  BitGo Public Key (Box C on BitGo Keycard)</label>
+                <input type="text" class="form-control" id="boxc" placeholder="The bitgo public key is a string like xpub661MyMwAqRbcG3hZxz6o3Vhg3FKCd3SXaNb6jJiWwEuDeQjqtvax4W2EFRyEEckTmu7PsPCsmgCHCkUSHvV3CXRiJcYWmAQDquNU2kovXFT" required="required" />
+              </div>
+            </div>
+            <div class="col-md-12">
+              <button type="button" class="btn btn-primary pull-right" onclick="startRecovery(); return false;" id="btnStartRecovery">
+                Begin Wallet Recovery</button>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  </form>
+  <div class="row">
+    <div class="col-md-12">
+      <form>
+        <div class="well well-sm">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="name">
+                  Message Console</label>
+                  <textarea name="console" id="console" disabled class="form-control" rows="9" cols="25" style="resize:vertical">
+This tool intentionally has no dependencies on the BitGo platform API. It uses an external API (blockr.io) for retrieving blockchain data. This is in order to demonstrate that Bitcoin stored in wallets created through the BitGo service can be recovered independently of BitGo, using only the KeyCard provided when creating a wallet on BitGo along with the wallet password.
+
+If you are trying to recover a live BitGo wallet due to a lost password, please use the online wallet recovery functionality available inside the BitGo interface. Contact support@bitgo.com for assistance.
+                  </textarea>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <div class="input-group">
+                      <span class="input-group-addon"><span class="glyphicon glyphicon-envelope"></span></span>
+                      <input type="email" class="form-control" id="email" placeholder="Enter email used to register with BitGo / KRS" required="required" disabled/>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="form-group">
+                    <input type="text" class="form-control" id="message" placeholder="Enter custom message here" />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <button type="button" class="btn btn-primary pull-right" onclick="sendRecoveryRequest(); return false;" id="btnSendRecoveryRequest" disabled>Send Recovery Request</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

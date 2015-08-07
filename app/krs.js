@@ -99,7 +99,7 @@ exports.requestRecovery = function(req) {
   var sendEmailToUser = function() {
     return utils.sendMailQ(
       userEmail,
-      "Bitcoin Recovery request initiated on {{:servicename}} using your backup key",
+      "Bitcoin Recovery request initiated on " + process.config.name + " using your backup key",
       "recoveryusertemplate",
       {
         xpub: xpub,
@@ -115,7 +115,7 @@ exports.requestRecovery = function(req) {
   var sendEmailToAdmin = function() {
     return utils.sendMailQ(
       process.config.adminemail,
-      "Bitcoin Recovery request initiated on {{:servicename}} using your backup key",
+      "Bitcoin Recovery request initiated on " + process.config.name + " for " + userEmail,
       "recoveryadmintemplate",
       {
         xpub: xpub,
