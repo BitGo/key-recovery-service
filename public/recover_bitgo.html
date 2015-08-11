@@ -10,10 +10,15 @@
 </head>
 <body>
 <script>
-  var network = bitcoin.networks.bitcoin;
   var ADDRESS_LOOKAHEAD = 20;
   var FEE_PER_KB = 0.0001 * 1e8;
-  var BLOCKR_BASE_API_URL = "https://tbtc.blockr.io/api/v1";
+
+  var network = bitcoin.networks.bitcoin;
+  var BLOCKR_BASE_API_URL = "https://btc.blockr.io/api/v1";
+
+  // Uncomment for testnet
+  // var network = bitcoin.networks.testnet;
+  // var BLOCKR_BASE_API_URL = "https://tbtc.blockr.io/api/v1";
 
   var keys = [];
   var addresses = {};
