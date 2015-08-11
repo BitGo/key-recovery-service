@@ -12,10 +12,13 @@
 <script>
   var network = bitcoin.networks.bitcoin;
   var ADDRESS_LOOKAHEAD = 20;
+  var FEE_PER_KB = 0.0001 * 1e8;
+  var BLOCKR_BASE_API_URL = "https://tbtc.blockr.io/api/v1";
 
   var keys = [];
   var addresses = {};
   var unspents = [];
+  var txSigningRequest = {};
 
   var appendLog = function(text) {
     $('#console').val($('#console').val() + "\n" + text);
@@ -48,6 +51,7 @@
     $("#passphrase").prop('disabled', state);
     $("#boxb").prop('disabled', state);
     $("#boxc").prop('disabled', state);
+    $("#destinationAddress").prop('disabled', state);
     $("#btnStartRecovery").prop('disabled', state);
   };
 
@@ -56,10 +60,18 @@
     $("#btnSendRecoveryRequest").prop('disabled', state);
   };
 
+  var formatBTCFromSatoshis = function(satoshis) {
+    return (satoshis * 1e-8).toFixed(4);
+  };
+
   var startRecovery = function() {
+    $("#console").animate({ height: "70%" }, 1000);
+    $("html, body").animate({ scrollTop: $(document).height() }, 1000);
+
     var userKey = $('#boxa').val();
     var backupXpub = $('#boxb').val();
     var bitgoXpub = $('#boxc').val();
+    var destinationAddress = $("#destinationAddress").val();
 
     setKeyCardInputDisableProperties(true);
     $('#console').val('Starting recovery.');
@@ -69,7 +81,6 @@
       var userHDNode = bitcoin.HDNode.fromBase58(userKey);
       keys.push(userHDNode);
       appendLog("Successfully parsed user xprv with xpub: " + userHDNode.neutered().toBase58());
-      return true;
     } catch (e) {
       try {
         userKey = sjcl.decrypt($('#passphrase').val(), $('#boxa').val());
@@ -101,87 +112,159 @@
       appendLog("Failed to parse bitgo xpub!");
       return setKeyCardInputDisableProperties(false);
     }
+    
+    // Validate the destination address
+    try {
+      bitcoin.Address.fromBase58Check(destinationAddress, network);
+    } catch (e) {
+      appendLog("Invalid destination bitcoin address!");
+      return setKeyCardInputDisableProperties(false);
+    }
 
-    var unspents = collectUnspents(keys);
-    // console.dir(unspents);
-
-    var result = {a:{b:5}};
-    // appendLog(JSON.stringify(result, null, '\t'));
-
-    setRecoveryRequestInputDisableProperties(false);
+    // delay 10ms to allow UI to update
+    setTimeout(function() {
+      collectUnspents(keys, function() {
+        craftTransaction(destinationAddress, function() {
+          // Check TX by decoding via API:
+          appendLog("Querying blockr.io API to verify tx..");
+          $.ajax({
+            type: "POST",
+            url: BLOCKR_API_BASE_URL + "/tx/decode",
+            cache: false,
+            dataType: "json",
+            data: JSON.stringify({ "hex" : txSigningRequest.transactionHex }),
+            success: function(response) {
+              appendLog("TX as described by blockr.io: ");
+              appendLog(JSON.stringify(response.data, null, '\t'));
+              setRecoveryRequestInputDisableProperties(false);
+              appendLog("Please verify the transaction. If it is acceptable, enter your email, add a message and press Send.");
+            }
+          });
+        });
+      });
+    }, 10);
   };
 
-  var collectUnspents = function(keys) {
+  var collectUnspents = function(keys, completedUnspentsCallback) {
+    appendLog("Now deriving wallet ID..");
+    appendLog("============================================================");
     // BitGo's key derivation paths are /0/0/0/i for user-generated addresses and /0/0/1/i for change adddresses.
     // Derive these top level paths first for performance reasons
     var keys_0_0 = deriveKeys(deriveKeys(keys, 0), 0);
     var keys_0_0_0 = deriveKeys(keys_0_0, 0);
     var keys_0_0_1 = deriveKeys(keys_0_0, 1);
 
-    var unspents = [];
-
     // We want to get the wallet id, which is the first /0/0/0/0.
     var walletAddress = createMultiSigAddress(deriveKeys(keys_0_0_0, 0));
     appendLog("The wallet ID detected was: " + walletAddress.toBase58Check());
-    appendLog("Now starting unspents collection. ");
+    appendLog("============================================================");
 
-    var queryBlockchainUnspents = function(keyArray, index) {
+    var queryBlockchainUnspents = function(keyArray, basePath, index, done) {
       var lookupThisBatch = [];
-      for(var i=0; i<ADDRESS_LOOKAHEAD; i++) {
+      for(var i = index; i < index + ADDRESS_LOOKAHEAD; i++) {
+        // Derive the address
         var derivedKeys = deriveKeys(keyArray, i);
-
         var address = createMultiSigAddress(derivedKeys);
         var addressBase58 = address.toBase58Check();
-        appendLog("Trying address: " + addressBase58);
+        appendLog("Trying address #" + i + ": " + addressBase58);
         lookupThisBatch.push(addressBase58);
 
+        address.chainPath = basePath + "/" + i;
         address.userKey = derivedKeys[0];
         addresses[addressBase58] = address;
       }
 
-      var url = "http://tbtc.blockr.io/api/v1/address/unspent/" + lookupThisBatch.join(",");
-      appendLog("URL: " + url);
-      var unspentsThisBatch = JSON.parse($.ajax({
+      var url = BLOCKR_BASE_API_URL + "/address/unspent/" + lookupThisBatch.join(",");
+      // appendLog("URL: " + url);
+
+      // Make async call to blockr.io
+      $.ajax({
         type: "GET",
         url: url,
         cache: false,
-        async: false,
-      }).responseText);
-      appendLog(JSON.stringify(unspentsThisBatch, null, '\t'))
+        dataType: "json",
+        success: function(response) {
+          var resultsWithUnspents = _.filter(response.data, function(singleAddressResult) { return singleAddressResult.unspent && singleAddressResult.unspent.length > 0; });
+          _.forEach(resultsWithUnspents, function(singleAddressResult) {
+            _.forEach(singleAddressResult.unspent, function(singleUnspent) {
+              singleUnspent.address = singleAddressResult.address;
+              singleUnspent.amount = Math.round(parseFloat(singleUnspent.amount)*1e8); // perform all handling in satoshis from here onwards
+              unspents.push(singleUnspent);
+              appendLog("Found " + formatBTCFromSatoshis(singleUnspent.amount) + " BTC in " + singleUnspent.address + " (" + singleUnspent.tx + ")");
+            });
+          });
+          // appendLog(JSON.stringify(resultsWithUnspents, null, '\t'));
+
+          // If we found some unspents, then we should continue searching
+          if (resultsWithUnspents.length > 0) {
+            queryBlockchainUnspents(keyArray, basePath, index + ADDRESS_LOOKAHEAD, done);
+          } else {
+            // No more unspents found after the lookahead, so finish up searching in this chain
+            done();
+          }
+        }
+      });
     };
 
-    queryBlockchainUnspents(keys_0_0_0, 0);
+    appendLog("Getting unspents on chain 0 (user created addresses).. ");
+    queryBlockchainUnspents(keys_0_0_0, "/0/0/0", 0, function() {
+      appendLog("Getting unspents on chain 1 (change).. ");
+      queryBlockchainUnspents(keys_0_0_1, "/0/0/1", 0, completedUnspentsCallback);
+    });
+  };
+
+  var craftTransaction = function(destinationAddress, done) {
+    var totalInputAmount = _.sum(unspents, function(u) { return u.amount; });
+    if (totalInputAmount <= 0) {
+      return appendLog("No input to recover - aborting!");
+    }
+    appendLog("Total number of inputs: " + unspents.length + ". ");
+    appendLog("Total amount found in inputs: " + formatBTCFromSatoshis(totalInputAmount) + " BTC. ");
+
+    var approximateSize = new bitcoin.Transaction().toBuffer().length + (232 * unspents.length);
+    var approximateFee = ((Math.floor(approximateSize / 1024)) + 1) * FEE_PER_KB;
+
+    appendLog("Now constructing tx.. ");
+    // Construct a transaction
+    var transactionBuilder = new bitcoin.TransactionBuilder(network);
+    txSigningRequest.inputs = [];
+    _.forEach(unspents, function(unspent) {
+      var address = addresses[unspent.address];
+      transactionBuilder.addInput(unspent.tx, unspent.n, 0xffffffff, bitcoin.Script.fromHex(unspent.script));
+      txSigningRequest.inputs.push({ chainPath: address.chainPath, redeemScript: address.redeemScript.toHex() });
+    });
+    transactionBuilder.addOutput(destinationAddress, totalInputAmount - approximateFee);
+
+    // Sign the inputs
+    appendLog("Signing tx.. ");
+    var i=0;
+    _.forEach(unspents, function(unspent) {
+      var address = addresses[unspent.address];
+      transactionBuilder.sign(i++, address.userKey.privKey, address.redeemScript, bitcoin.Transaction.SIGHASH_ALL);
+    });
+
+    txSigningRequest.transactionHex = transactionBuilder.buildIncomplete().toHex();
+    appendLog("Raw TX: " + txSigningRequest.transactionHex);
+    done();
   };
 
   var sendRecoveryRequest = function() {
     setRecoveryRequestInputDisableProperties(true);
-    // mock this first
-    var params = { "xpub": $('#boxb').val(),
-      "userEmail": $('#email').val(),
-      "transactionHex": "010000000176f1169fc7252d173b539b72be897408348ff37d72c236424e4026e057bc9cf60000000000ffffffff01607be660190000001976a914dbb0c5b54a9347cb1ee82dbded41e2302ad5360488ac00000000",
-      "inputs": [
-        {
-          "chainPath": "/0/1645",
-          "redeemScript": "522103cdfebbd122a9fa9ba405efead022b24055273a12bffd7e5af1fc6e5bfdbe8dd32102688027f13b00377ae19da43f3474f598ade81b967a365d3ee7d34867f2eba5732102c12f3d5579458b8d8a08fcfd0f47c0b8c1dffe29fcc20fc84f33ef02e28c39a353ae"
-        },
-        {},
-        {
-          "chainPath": "/0/8397",
-          "redeemScript": "522103147f08b4017d5207470aee49d888cf2a7ae49306a916147475378ebd2dab661d21029f6ad03f8933b8b83ca54246fc47f0e7d41dccac9629e0602433cee2c02f664421026b432d8b41d81338a6b3c4fd4a492cd0b9485a97deb7f68502176b03c6bb17de53ae"
-        }
-      ],
-      "custom": { "message" : $('#message').val() }
-    };
-    appendLog("Sending recovery request to KRS");
-    var recoveryResponse = JSON.parse($.ajax({
+    txSigningRequest.xpub = $('#boxb').val();
+    txSigningRequest.userEmail = $('#email').val();
+    txSigningRequest.custom = { "message" : $('#message').val() };
+    appendLog("Sending recovery request to KRS..");
+    $.ajax({
       type: "POST",
-      data: JSON.stringify(params),
-      dataType: "json",
-      url: "https://keyvault.io/recovery",
       cache: false,
-      async: false
-    }).responseText);
-    appendLog(JSON.stringify(recoveryResponse, null, '\t'));
+      dataType: "json",
+      contentType: "application/json; charset=utf-8",
+      url: "/recover",
+      data: JSON.stringify(txSigningRequest),
+      success: function(response) {
+        appendLog("Transaction successfully sent to key recovery service. Please check your email for further instructions.");
+      }
+    });
   }
 </script>
 <div class="jumbotron jumbotron-sm">
@@ -224,6 +307,11 @@
                 <label for="boxc">
                   BitGo Public Key (Box C on BitGo Keycard)</label>
                 <input type="text" class="form-control" id="boxc" placeholder="The bitgo public key is a string like xpub661MyMwAqRbcG3hZxz6o3Vhg3FKCd3SXaNb6jJiWwEuDeQjqtvax4W2EFRyEEckTmu7PsPCsmgCHCkUSHvV3CXRiJcYWmAQDquNU2kovXFT" required="required" />
+              </div>
+              <div class="form-group">
+                <label for="destinationAddress">
+                  Destination Recovery Address</label>
+                <input type="text" class="form-control" id="destinationAddress" placeholder="The bitcoin address to send recovered funds" required="required" />
               </div>
             </div>
             <div class="col-md-12">
