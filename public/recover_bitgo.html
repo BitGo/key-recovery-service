@@ -14,11 +14,11 @@
   var FEE_PER_KB = 0.0001 * 1e8;
 
   var network = bitcoin.networks.bitcoin;
-  var BLOCKR_BASE_API_URL = "https://btc.blockr.io/api/v1";
+  var BLOCKR_API_BASE_URL = "https://btc.blockr.io/api/v1";
 
   // Uncomment for testnet
   // var network = bitcoin.networks.testnet;
-  // var BLOCKR_BASE_API_URL = "https://tbtc.blockr.io/api/v1";
+  // var BLOCKR_API_BASE_URL = "https://tbtc.blockr.io/api/v1";
 
   var keys = [];
   var addresses = {};
@@ -93,7 +93,6 @@
         keys.push(userHDNode);
         appendLog("Successfully decrypted and parsed user xprv with xpub: " + userHDNode.neutered().toBase58());
       } catch (e) {
-        console.dir(e);
         appendLog("Failed to decrypt user key with passphrase - try again!");
         return setKeyCardInputDisableProperties(false);
       }
@@ -179,7 +178,7 @@
         addresses[addressBase58] = address;
       }
 
-      var url = BLOCKR_BASE_API_URL + "/address/unspent/" + lookupThisBatch.join(",");
+      var url = BLOCKR_API_BASE_URL + "/address/unspent/" + lookupThisBatch.join(",");
       // appendLog("URL: " + url);
 
       // Make async call to blockr.io
@@ -221,7 +220,8 @@
   var craftTransaction = function(destinationAddress, done) {
     var totalInputAmount = _.sum(unspents, function(u) { return u.amount; });
     if (totalInputAmount <= 0) {
-      return appendLog("No input to recover - aborting!");
+      appendLog("No input to recover - aborting!");
+      return setKeyCardInputDisableProperties(false);
     }
     appendLog("Total number of inputs: " + unspents.length + ". ");
     appendLog("Total amount found in inputs: " + formatBTCFromSatoshis(totalInputAmount) + " BTC. ");
