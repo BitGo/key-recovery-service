@@ -1,4 +1,6 @@
 *.swp
+.idea/
 node_modules
 npm-debug.log
 coverage
+config.json

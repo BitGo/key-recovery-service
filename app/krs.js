@@ -146,6 +146,7 @@ exports.requestRecovery = function(req) {
       return result;
     }
     recoveryRequest.masterxpub = key.masterxpub;
+    recoveryRequest.chainPath = key.path; // the chain path of this user
     return Q.all([recoveryRequest.saveQ(), sendEmailToAdmin(), sendEmailToUser()])
     .spread(function(saveResult, emailToAdminResult, emailToUserResult) {
       result = saveResult;
