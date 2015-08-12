@@ -3,6 +3,7 @@ Key Recovery Service
 The key recovery service will let someone serve xpubs to anyone who requests one for use as a cold key in multisig wallets.
 
 This service implements:
+
 1. The key provisioning protocol (endpoint to get keys), provisioning keys by deriving them off an xPub.  
 2. An email to be sent to users when a key is provisioned, setting up their relationship with the KRS provider. 
 3. A script for users to construct and sign recovery transactions for their BitGo HD wallet. 
