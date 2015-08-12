@@ -88,13 +88,13 @@ exports.requestRecovery = function(req) {
     throw utils.ErrorResponse(400, 'xpub, userEmail, transactionHex and inputs required');
   }
 
-  var recoveryRequest = new RecoveryRequest({
+  var recoveryRequest = {
     xpub: xpub,
     userEmail: userEmail,
     transactionHex: transactionHex,
     inputs: inputs,
     custom: custom
-  });
+  };
 
   var sendEmailToUser = function() {
     return utils.sendMailQ(
@@ -127,7 +127,7 @@ exports.requestRecovery = function(req) {
       // The attachments
       [
         {
-          filename: 'recovery_' + xpub + '_' + moment().format('YYYYMDHm'),
+          filename: 'recovery_' + xpub + '_' + moment().format('YYYYMDHm') + '.json',
           content: JSON.stringify(recoveryRequest)
         }
       ]
@@ -147,7 +147,7 @@ exports.requestRecovery = function(req) {
     }
     recoveryRequest.masterxpub = key.masterxpub;
     recoveryRequest.chainPath = key.path; // the chain path of this user
-    return Q.all([recoveryRequest.saveQ(), sendEmailToAdmin(), sendEmailToUser()])
+    return Q.all([RecoveryRequest.createQ(recoveryRequest), sendEmailToAdmin(), sendEmailToUser()])
     .spread(function(saveResult, emailToAdminResult, emailToUserResult) {
       result = saveResult;
     });
