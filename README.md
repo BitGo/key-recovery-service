@@ -1,6 +1,6 @@
 Key Recovery Service
 ====================
-The key recovery service will let someone serve xpubs to anyone who requests one for use as a cold key in multisig wallets.
+The key recovery service dispenses xpubs (Bitcoin public keys) to anyone who requests one for use as a cold key in multisig wallets.
 
 This service implements:
 
