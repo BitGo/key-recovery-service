@@ -7,12 +7,12 @@ if (process.config.mail) {
   // create reusable transporter object using SMTP transport
   var mailTransport = nodemailer.createTransport(smtpTransport(process.config.mail));
   var sendMail = Q.nbind(mailTransport.sendMail, mailTransport);
-}
 
-// prepare templates using jsrender
-jsrender.loadFileSync('newkeytemplate', './app/templates/newkeytemplate.html');
-jsrender.loadFileSync('recoveryusertemplate', './app/templates/recoveryusertemplate.html');
-jsrender.loadFileSync('recoveryadmintemplate', './app/templates/recoveryadmintemplate.html');
+  // prepare templates using jsrender
+  jsrender.loadFileSync('newkeytemplate', './app/templates/newkeytemplate.html');
+  jsrender.loadFileSync('recoveryusertemplate', './app/templates/recoveryusertemplate.html');
+  jsrender.loadFileSync('recoveryadmintemplate', './app/templates/recoveryadmintemplate.html');
+}
 
 // Error response container for handling by the promise wrapper
 exports.ErrorResponse = function(status, result) {
@@ -81,4 +81,8 @@ exports.sendMailQ = function(toEmail, subject, template, templateParams, attachm
 
   // send mail with defined transport object
   return sendMail(mailOptions);
+};
+
+exports.formatBTCFromSatoshis = function(satoshis) {
+  return (satoshis * 1e-8).toFixed(4);
 };
