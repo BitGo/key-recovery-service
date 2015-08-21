@@ -10,10 +10,17 @@ This service implements:
 4. The recovery request endpoint, which takes in a transaction for signing, stores the requested recovery, and sends a emails to the KRS owner and user. 
 5. A offline signing tool to sign recovery requests (in JSON format).
 
-To try it, either run the tests with ``npm test``, or try running the server with
-``node bin/server.js`` and then issuing a curl command like:
+Tests for the service can be run with ``npm test``. 
 
-``curl -H "Content-Type: application/json" -d '{ "userEmail": "benchan@bitgo.com" }' http://localhost:6833/key``
+Getting Started
+====================
+1. Git clone this repository.
+2. Do an ``npm install`` in the root folder.
+3. Run ``node bin/server.js`` to start the service .
+4. The service should be accessible in the browser via ``http://localhost:6833/key`` 
+5. Start obtaining a key by issuing a curl command like:
+
+``curl -H "Content-Type: application/json" -d '{ "userEmail": "your@email.com" }' http://localhost:6833/key``
 
 Offline Signing Tool
 ====================
