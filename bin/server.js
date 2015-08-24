@@ -67,7 +67,7 @@ if (args.keypath && args.crtpath) {
 }
 
 var host = args.bind || process.config.host;
-var port = args.port || process.config.port;
+var port = args.port || process.env.PORT || process.config.port;
 
 db.connection.on('error', console.error.bind(console, 'database connection error: '));
 db.connection.once('open', function () {
