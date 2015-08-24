@@ -22,7 +22,6 @@ var getArgs = function () {
 
   parser.addArgument(
   ['-b', '--bind'], {
-    defaultValue: 'localhost',
     help: 'Bind to given address to listen for connections (default: localhost)'
   });
 
@@ -65,7 +64,7 @@ if (args.keypath && args.crtpath) {
   server = http.createServer(app);
 }
 
-var host = args.bind || process.config.host;
+var host = args.bind || process.config.host || 'localhost';
 var port = args.port || process.env.PORT || process.config.port || 80;
 
 db.connection.on('error', console.error.bind(console, 'database connection error: '));
