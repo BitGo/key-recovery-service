@@ -17,7 +17,6 @@ var getArgs = function () {
 
   parser.addArgument(
   ['-p', '--port'], {
-    defaultValue: 6833,
     help: 'Port to listen on'
   });
 
@@ -67,7 +66,7 @@ if (args.keypath && args.crtpath) {
 }
 
 var host = args.bind || process.config.host;
-var port = args.port || process.env.PORT || process.config.port;
+var port = args.port || process.env.PORT || process.config.port || 80;
 
 db.connection.on('error', console.error.bind(console, 'database connection error: '));
 db.connection.once('open', function () {
