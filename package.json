@@ -4,7 +4,8 @@
   "description": "Key service implementing KRS protocol to provision xpubs for backup use",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive"
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive",
+    "start": "node bin/server.js"
   },
   "license": "MIT",
   "devDependencies": {
