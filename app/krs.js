@@ -37,6 +37,17 @@ exports.provisionKey = function(req) {
     masterxpub: process.config.masterxpub
   });
 
+  if (process.config.requesterAuth && process.config.requesterAuth.required) {
+    if (!req.body.requesterId && !req.body.requesterSecret) {
+      throw utils.ErrorResponse(401, 'this krs requires you to send a requesterId and requesterSecret to get a key');
+    }
+    if (!process.config.requesterAuth.clients[req.body.requesterId] ||
+        process.config.requesterAuth.clients[req.body.requesterId] !== req.body.requesterSecret) {
+      throw utils.ErrorResponse(401, 'invalid requesterSecret');
+    }
+    key.requesterId = req.body.requesterId;
+  }
+
   return key.saveQ()
   .then(function(result) {
     return utils.sendMailQ(
