@@ -14,5 +14,12 @@
       "user": "postmaster@sandbox76422cdc4433464496a6ec2fc047483b.mailgun.org",
       "pass": "c977ad811d6ca46cd24e59238abb4e78"
     }
+  },
+  "requesterAuth": {
+    "required": false,
+    "clients":
+    {
+      "bitgo": "changeThisSecret"
+    }
   }
 }

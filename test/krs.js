@@ -30,6 +30,69 @@ describe('KRS Controller', function() {
         error.result.should.eql('userEmail required');
       });
     });
+    it('requester client id and secret not specified', function() {
+      process.config.requesterAuth.required = true;
+      return Q()
+      .then(function() {
+        return KRS.provisionKey({body: {userEmail: 'test@example.com'}});
+      })
+      .then(function(result) {
+        throw new Error("should not succeed!");
+      })
+      .catch(function(error) {
+        error.result.should.include("this krs requires you to send a requesterId and requesterSecret");
+        process.config.requesterAuth.required = false;
+      });
+    });
+    it('requester client id specified wrongly (blank)', function() {
+      process.config.requesterAuth.required = true;
+      return Q()
+        .then(function() {
+          return KRS.provisionKey({body: {userEmail: 'test@example.com', requesterId: ' ', requesterSecret: process.config.requesterAuth.clients.bitgo}});
+        })
+        .then(function(result) {
+          throw new Error("should not succeed!");
+        })
+        .catch(function(error) {
+          error.result.should.include("invalid requesterSecret");
+          process.config.requesterAuth.required = false;
+        });
+    });
+    it('requester client id specified but secret incorrect', function() {
+      process.config.requesterAuth.required = true;
+      return Q()
+      .then(function() {
+        return KRS.provisionKey({body: {userEmail: 'test@example.com', requesterId: 'bitgo', requesterSecret: 'badhacker'}});
+      })
+      .then(function(result) {
+        throw new Error("should not succeed!");
+      })
+      .catch(function(error) {
+        error.result.should.include("invalid requesterSecret");
+        process.config.requesterAuth.required = false;
+      });
+    });
+    it('should return a new key with correct requester id and secret', function() {
+      process.config.requesterAuth.required = true;
+      return Q()
+      .then(function() {
+        return KRS.provisionKey({body: {userEmail: 'test@example.com', requesterId: 'bitgo', requesterSecret: process.config.requesterAuth.clients.bitgo}});
+      })
+      .then(function(result) {
+        result.xpub.substr(0, 4).should.equal('xpub');
+        result.userEmail.should.equal('test@example.com');
+        return Key.findOneQ({xpub: result.xpub})
+        .then(function(key) {
+          key.xpub.should.eql(result.xpub);
+          key.path.should.eql(result.path);
+          key.requesterId.should.eql('bitgo');
+        });
+      });
+    });
+
+    after(function() {
+      process.config.requesterAuth.required = false;
+    });
   });
 
   describe('validateKey', function() {
