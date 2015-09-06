@@ -5,6 +5,9 @@ var https = require('https');
 var pjson = require('../package.json');
 
 process.config = require('../config');
+
+process.config.masterxpub = process.env.MASTERXPUB;
+
 var db = require('../app/db');
 
 // Handle arguments

@@ -4,7 +4,6 @@
   "host": "0.0.0.0",
   "port": 6833,
   "adminemail": "benchan@bitgo.com",
-  "masterxpub": "xpub661MyMwAqRbcGnYJHEwr8CPAr6hSXC8xiMjxQi39EKyfBD99rJb7kQVqce2EFDTZutdaR2rb92xpULJqPjarYCsybvzY9AfQCkkEii6XE54",
   "mongouri": "mongodb://localhost/key-recovery-service",
   "mail": {
     "fromemail": "XPub.XYZ <keyserver@xpub.xyz>",
