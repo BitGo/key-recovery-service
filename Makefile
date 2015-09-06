@@ -36,7 +36,7 @@ inside: up
 	echo 'hi'
 
 local_serve: up
-	vagrant ssh -c 'cd /vagrant && nodejs bin/server.js'
+	vagrant ssh -c 'cd /vagrant && envdir ./env nodejs bin/server.js'
 
 test_master:
 	git checkout master
