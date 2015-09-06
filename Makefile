@@ -47,7 +47,7 @@ deploy: test_master
 
 clean:
 	-rm -rf node_modules
-	-rm -npm-debug.log
+	-rm npm-debug.log
 	-rm coverage
 	
 distclean: clean
