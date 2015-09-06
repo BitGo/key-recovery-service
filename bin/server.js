@@ -7,6 +7,7 @@ var pjson = require('../package.json');
 process.config = require('../config');
 
 process.config.masterxpub = process.env.MASTERXPUB;
+process.config.adminemail = process.env.ADMINEMAIL;
 
 var db = require('../app/db');
 

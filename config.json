@@ -3,7 +3,6 @@
   "serviceurl": "http://keyrecoveryservice.yourdomain.com/",
   "host": "0.0.0.0",
   "port": 6833,
-  "adminemail": "benchan@bitgo.com",
   "mongouri": "mongodb://localhost/key-recovery-service",
   "mail": {
     "fromemail": "XPub.XYZ <keyserver@xpub.xyz>",
