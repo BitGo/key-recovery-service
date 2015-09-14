@@ -3,16 +3,14 @@
   "serviceurl": "http://keyrecoveryservice.yourdomain.com/",
   "host": "0.0.0.0",
   "port": 6833,
-  "adminemail": "benchan@bitgo.com",
-  "masterxpub": "xpub661MyMwAqRbcGnYJHEwr8CPAr6hSXC8xiMjxQi39EKyfBD99rJb7kQVqce2EFDTZutdaR2rb92xpULJqPjarYCsybvzY9AfQCkkEii6XE54",
   "mongouri": "mongodb://localhost/key-recovery-service",
   "mail": {
     "fromemail": "XPub.XYZ <keyserver@xpub.xyz>",
     "host": "smtp.mailgun.org",
     "port": 587,
     "auth": {
-      "user": "postmaster@sandbox76422cdc4433464496a6ec2fc047483b.mailgun.org",
-      "pass": "c977ad811d6ca46cd24e59238abb4e78"
+      "user": "postmaster@sandbox9ae0644cd10c48fdaf55f7febe9d1154.mailgun.org",
+      "pass": "89855a06454a5044c422af89563ad4bc"
     }
   },
   "requesterAuth": {
