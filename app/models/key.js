@@ -6,6 +6,7 @@ var keySchema = new mongoose.Schema({
   path: {type: String},
   xpub: {type: String},
   userEmail: {type: String},
+  notificationURL: {type: String},
   custom: {},
   requesterId: {type: String},
   masterxpub: {type: String} // support future cases where we may use more than one master xpub

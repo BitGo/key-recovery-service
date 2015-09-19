@@ -36,7 +36,21 @@ describe('Application Server', function() {
     it('should return a new key', function() {
       return agent
       .post('/key')
-      .send({userEmail: 'test@example.com'})
+      .send({userEmail: 'test@example.com', notificationURL: 'https://test.bitgo.com'})
+      .then(function(res) {
+        res.status.should.eql(200);
+        should.exist(res.body.path);
+        res.body.path.substr(0, 2).should.equal('m/');
+        should.exist(res.body.xpub);
+        res.body.xpub.substr(0, 4).should.equal('xpub');
+        res.body.userEmail.should.equal('test@example.com');
+      });
+    });
+
+    it('should inform a local instance of BitGo WWW about the new key', function() {
+      return agent
+      .post('/key')
+      .send({userEmail: 'test@example.com', notificationURL: 'http://localhost:3000/api/v1/backup-key'})
       .then(function(res) {
         res.status.should.eql(200);
         should.exist(res.body.path);

@@ -3,6 +3,10 @@ var crypto = require('crypto');
 var assert = require('assert');
 var mongoose = require('mongoose');
 var moment = require('moment');
+
+var request = require('superagent');
+require('superagent-as-promised')(request);
+
 var validator = require('validator');
 var Q = require('q');
 var _ = require('lodash');
@@ -15,7 +19,29 @@ if (process.config.masterxpub.substr(0, 4) !== 'xpub') {
   throw new Error('masterxpub must start with "xpub"');
 }
 
+var notifyEndpoint = function(key, state) {
+  var notificationURL = key.notificationURL;
+  var userEmail = key.userEmail;
+  var xpub = key.xpub;
+  if (!notificationURL) {
+    return;
+  }
+  return request.post(notificationURL)
+  .send({
+    userEmail: userEmail,
+    provider: process.config.providerID,
+    state: state,
+    xpub: xpub
+  })
+  .catch(function(err) {
+    // we do not want to throw an error because this has to work even if BitGo is down
+    console.log('error connecting to webhook URL');
+  });
+};
+
 exports.provisionKey = function(req) {
+
+
   var userEmail = req.body.userEmail;
   if (!userEmail) {
     throw utils.ErrorResponse(400, 'userEmail required');
@@ -27,12 +53,15 @@ exports.provisionKey = function(req) {
   var custom = req.body.custom || {};
   custom.created = new Date();
 
+  var notificationURL = req.body.notificationURL;
+
   var path = exports.randomPath();
   var xpub = exports.deriveFromPath(path);
   var key = new Key({
     path: path,
     xpub: xpub,
     userEmail: userEmail,
+    notificationURL: notificationURL,
     custom: custom,
     masterxpub: process.config.masterxpub
   });
@@ -49,7 +78,7 @@ exports.provisionKey = function(req) {
   }
 
   return key.saveQ()
-  .then(function(result) {
+  .then(function() {
     return utils.sendMailQ(
       userEmail,
       "Information about your backup key",
@@ -65,6 +94,9 @@ exports.provisionKey = function(req) {
     .catch(function(e) {
       throw utils.ErrorResponse(503, "Problem sending email");
     });
+  })
+  .then(function() {
+    return notifyEndpoint(key, 'created');
   })
   .then(function() {
     return key;
@@ -158,8 +190,8 @@ exports.requestRecovery = function(req) {
     }
     recoveryRequest.masterxpub = key.masterxpub;
     recoveryRequest.chainPath = key.path; // the chain path of this user
-    return Q.all([RecoveryRequest.createQ(recoveryRequest), sendEmailToAdmin(), sendEmailToUser()])
-    .spread(function(saveResult, emailToAdminResult, emailToUserResult) {
+    return Q.all([RecoveryRequest.createQ(recoveryRequest), sendEmailToAdmin(), sendEmailToUser(), notifyEndpoint(key, 'prerecovery')])
+    .spread(function(saveResult, emailToAdminResult, emailToUserResult, notificationResult) {
       result = saveResult;
     });
   })
