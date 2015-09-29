@@ -50,7 +50,7 @@ describe('Application Server', function() {
     it('should inform a local instance of BitGo WWW about the new key', function() {
       return agent
       .post('/key')
-      .send({userEmail: 'test@example.com', notificationURL: 'http://localhost:3000/api/v1/backup-key'})
+      .send({userEmail: 'test@example.com', notificationURL: 'http://localhost:3000/api/v1/keychain/webhook'})
       .then(function(res) {
         res.status.should.eql(200);
         should.exist(res.body.path);

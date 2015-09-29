@@ -20,18 +20,27 @@ if (process.config.masterxpub.substr(0, 4) !== 'xpub') {
 }
 
 var notifyEndpoint = function(key, state) {
+  var generateHMAC = function(xpub){
+    var hmac = crypto.createHmac('sha256', process.config.provider.secret);
+    hmac.update(xpub);
+    return hmac.digest('hex');
+  };
+
   var notificationURL = key.notificationURL;
-  var userEmail = key.userEmail;
-  var xpub = key.xpub;
   if (!notificationURL) {
     return;
   }
+  var userEmail = key.userEmail;
+  var xpub = key.xpub;
+  var hmac = generateHMAC(xpub);
+
   return request.post(notificationURL)
   .send({
     userEmail: userEmail,
-    provider: process.config.providerID,
+    provider: process.config.provider.id,
     state: state,
-    xpub: xpub
+    xpub: xpub,
+    hmac: hmac
   })
   .catch(function(err) {
     // we do not want to throw an error because this has to work even if BitGo is down
