@@ -24,6 +24,9 @@
   var addresses = {};
   var unspents = [];
   var txSigningRequest = {};
+  var krsPaymentAddress;
+  var krsPaymentPercentage;
+  var krsMinimumAmount;
 
   var appendLog = function(text) {
     $('#console').val($('#console').val() + "\n" + text);
@@ -77,6 +80,9 @@
     var backupXpub = $('#boxb').val();
     var bitgoXpub = $('#boxc').val();
     var destinationAddress = $("#destinationAddress").val();
+    krsPaymentAddress = $('#krsPaymentAddress').val();
+    krsPaymentPercentage = parseFloat($('#krsPaymentPercentage').val()) || 0;
+    krsMinimumAmount = parseFloat($('#krsMinimumAmount').val()) * 1e8 || 0;
 
     setKeyCardInputDisableProperties(true);
     $('#console').val('Starting recovery.');
@@ -123,6 +129,33 @@
     } catch (e) {
       appendLog("Invalid destination bitcoin address!");
       return setKeyCardInputDisableProperties(false);
+    }
+
+    // Validate the KRS payment fields, if populated
+    if (krsPaymentAddress && krsPaymentAddress != "") {
+      // Validate the KRS payment address
+      try {
+        bitcoin.Address.fromBase58Check(krsPaymentAddress, network);
+      } catch (e) {
+        appendLog("Invalid KRS payment bitcoin address!");
+        return setKeyCardInputDisableProperties(false);
+      }
+
+      // Validate the parameters indicating the amount to pay the KRS
+      if (!krsPaymentPercentage && !krsMinimumAmount) {
+        appendLog("Must provide either a payment % or recovery fee to determine the amount to the KRS payout!");
+        return setKeyCardInputDisableProperties(false);
+      }
+
+      if (krsPaymentPercentage && (krsPaymentPercentage < 0 || krsPaymentPercentage > 100)) {
+        appendLog("KRS payment percentage must be between 0 - 100!");
+        return setKeyCardInputDisableProperties(false);
+      }
+
+      if (krsMinimumAmount && (krsMinimumAmount < 0)) {
+        appendLog("KRS minimum payout fee cannot be negative!");
+        return setKeyCardInputDisableProperties(false);
+      }
     }
 
     // delay 10ms to allow UI to update
@@ -238,7 +271,32 @@
       transactionBuilder.addInput(unspent.tx, unspent.n, 0xffffffff, bitcoin.Script.fromHex(unspent.script));
       txSigningRequest.inputs.push({ chainPath: address.chainPath, redeemScript: address.redeemScript.toHex() });
     });
-    transactionBuilder.addOutput(destinationAddress, totalInputAmount - approximateFee);
+
+    var calculatedKRSPaymentAmount = 0;
+    if (krsPaymentAddress && krsPaymentAddress != "") {
+      calculatedKRSPaymentAmount = Math.round(totalInputAmount * krsPaymentPercentage / 100);
+      if (krsMinimumAmount > calculatedKRSPaymentAmount) {
+        if (totalInputAmount < krsMinimumAmount) {
+          appendLog("Not enough inputs to pay the KRS minimum amount - aborting!");
+          return setKeyCardInputDisableProperties(false);
+        }
+        calculatedKRSPaymentAmount = Math.round(krsMinimumAmount);
+      }
+    }
+
+    var usableAmount = totalInputAmount - calculatedKRSPaymentAmount - approximateFee;
+    if (usableAmount < 0) {
+      appendLog("Negative output after fees!");
+      return setKeyCardInputDisableProperties(false);
+    }
+
+    appendLog("Adding destination output: " + formatBTCFromSatoshis(usableAmount) + " BTC to " + destinationAddress + ". ");
+    transactionBuilder.addOutput(destinationAddress, usableAmount);
+
+    if (calculatedKRSPaymentAmount > 0) {
+      appendLog("Adding KRS reward payment: " + formatBTCFromSatoshis(calculatedKRSPaymentAmount) + " BTC to " + krsPaymentAddress + ". ");
+      transactionBuilder.addOutput(krsPaymentAddress, calculatedKRSPaymentAmount);
+    }
 
     // Sign the inputs
     appendLog("Signing tx.. ");
@@ -317,6 +375,30 @@
                 <label for="destinationAddress">
                   Destination Recovery Address</label>
                 <input type="text" class="form-control" id="destinationAddress" placeholder="The bitcoin address to send recovered funds" required="required" />
+              </div>
+              <!-- KRS providers can customize the next row to collect the recovery payment as part of the recovery transaction -->
+              <div class="row hide">
+                <div class="col-md-7">
+                  <div class="form-group">
+                    <label for="krsPaymentAddress">
+                      KRS Payment Address</label>
+                    <input type="text" class="form-control" id="krsPaymentAddress" placeholder="The bitcoin address to send the recovery reward for the KRS (blank to skip)" />
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label for="krsPaymentPercentage">
+                      KRS Payment %</label>
+                    <input type="text" class="form-control" id="krsPaymentPercentage" placeholder="% of coins to pay as fee" value="10" />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label for="krsMinimumAmount">
+                      Min Recovery Fee</label>
+                    <input type="text" class="form-control" id="krsMinimumAmount" placeholder="Min amount (BTC) fee to pay KRS" value="0.1" />
+                  </div>
+                </div>
               </div>
             </div>
             <div class="col-md-12">
