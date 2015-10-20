@@ -20,10 +20,10 @@
   // var network = bitcoin.networks.testnet;
   // var BLOCKR_API_BASE_URL = "https://tbtc.blockr.io/api/v1";
 
-  var keys = [];
-  var addresses = {};
-  var unspents = [];
-  var txSigningRequest = {};
+  var keys;
+  var addresses;
+  var unspents;
+  var txSigningRequest;
   var krsPaymentAddress;
   var krsPaymentPercentage;
   var krsMinimumAmount;
@@ -73,6 +73,12 @@
   };
 
   var startRecovery = function() {
+
+    keys = [];
+    addresses = {};
+    unspents = [];
+    txSigningRequest = {};
+
     $("#console").animate({ height: "70%" }, 1000);
     $("html, body").animate({ scrollTop: $(document).height() }, 1000);
 
