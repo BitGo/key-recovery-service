@@ -30,6 +30,7 @@ describe('KRS Controller', function() {
         error.result.should.eql('userEmail required');
       });
     });
+    
     it('requester client id and secret not specified', function() {
       process.config.requesterAuth.required = true;
       return Q()
@@ -87,6 +88,17 @@ describe('KRS Controller', function() {
           key.path.should.eql(result.path);
           key.requesterId.should.eql('bitgo');
         });
+      });
+    });
+
+    it('should provision key correctly if disableKRSEmail was passed in', function() {
+      return Q()
+      .then(function() {
+        return KRS.provisionKey({body: { userEmail: 'satoshi@bitgo.com' }})
+      })
+      .then(function(key) {
+        should.exist(key);
+        key.userEmail.should.equal('satoshi@bitgo.com');
       });
     });
 

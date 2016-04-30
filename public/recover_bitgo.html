@@ -191,7 +191,7 @@
   var collectUnspents = function(keys, completedUnspentsCallback) {
     appendLog("Now deriving wallet ID..");
     appendLog("============================================================");
-    // BitGo's key derivation paths are /0/0/0/i for user-generated addresses and /0/0/1/i for change adddresses.
+    // BitGo's key derivation paths are /0/0/0/i for user-generated addresses and /0/0/1/i for change addresses.
     // Derive these top level paths first for performance reasons
     var keys_0_0 = deriveKeys(deriveKeys(keys, 0), 0);
     var keys_0_0_0 = deriveKeys(keys_0_0, 0);

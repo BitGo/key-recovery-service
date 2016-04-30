@@ -88,6 +88,10 @@ exports.provisionKey = function(req) {
 
   return key.saveQ()
   .then(function() {
+    if (req.body.disableKRSEmail) {
+      // for API users who don't want their inboxes filling up with unread KRS backup key creation emails
+      return;
+    }
     return utils.sendMailQ(
       userEmail,
       "Information about your backup key",
