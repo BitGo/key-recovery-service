@@ -92,9 +92,10 @@ describe('KRS Controller', function() {
     });
 
     it('should provision key correctly if disableKRSEmail was passed in', function() {
+      process.config.requesterAuth.required = false;
       return Q()
       .then(function() {
-        return KRS.provisionKey({body: { userEmail: 'satoshi@bitgo.com' }})
+        return KRS.provisionKey({body: { userEmail: 'satoshi@bitgo.com', disableKRSEmail: true }})
       })
       .then(function(key) {
         should.exist(key);
