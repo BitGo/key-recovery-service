@@ -145,7 +145,7 @@ describe('KRS Controller', function() {
       }).should.throw('invalid path');
       (function() {
         KRS.deriveFromPath("m/" + (Math.pow(2, 32) + 1));
-      }).should.throw('value is out of bounds');
+      }).should.throw('Expected UInt32, got Number 4294967297');
       (function() {
         KRS.deriveFromPath("m/" + (Math.pow(2, 31) + 1));
       }).should.throw('Could not derive hardened child key');

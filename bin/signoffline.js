@@ -59,8 +59,8 @@ console.log("=========================");
 console.log("User Email: " + recoveryRequest.userEmail);
 console.log("User XPub: " + recoveryRequest.xpub);
 _.forEach(transaction.outs, function(output) {
-  var outAddress = bitcoin.Address.fromOutputScript(output.script, bitcoin.networks.testnet);
-  console.log("Output Address: " + outAddress.toBase58Check());
+  var outAddress = bitcoin.address.fromOutputScript(output.script, bitcoin.networks.testnet);
+  console.log("Output Address: " + outAddress);
   console.log("Output Amount: " + utils.formatBTCFromSatoshis(output.value) + " BTC");
 });
 console.log("Custom Message: " + userMessage);
@@ -101,11 +101,17 @@ var transactionBuilder = bitcoin.TransactionBuilder.fromTransaction(transaction)
 
 var i = 0;
 _.forEach(recoveryRequest.inputs, function(input) {
+  var isSegwitInput = !!input.witnessScript;
   var derivedHDNode = walletBackupXpubHDNode.deriveFromPath(input.chainPath);
-  var redeemScript = bitcoin.Script.fromHex(input.redeemScript);
-  console.log("Signing input " + (i+1) + " of " + recoveryRequest.inputs.length +
-              " with " + derivedHDNode.neutered().toBase58() + " (" + input.chainPath + ")");
-  transactionBuilder.sign(i++, derivedHDNode.privKey, redeemScript, bitcoin.Transaction.SIGHASH_ALL);
+  var redeemScript = new Buffer(input.redeemScript, 'hex');
+  console.log("Signing input " + (i + 1) + " of " + recoveryRequest.inputs.length +
+  " with " + derivedHDNode.neutered().toBase58() + " (" + input.chainPath + ")");
+  if (isSegwitInput) {
+    var witnessScript = new Buffer(input.witnessScript, 'hex');
+    transactionBuilder.sign(i++, derivedHDNode.keyPair, redeemScript, bitcoin.Transaction.SIGHASH_ALL, input.amount, witnessScript);
+  } else {
+    transactionBuilder.sign(i++, derivedHDNode.keyPair, redeemScript, bitcoin.Transaction.SIGHASH_ALL);
+  }
 });
 
 var finalTransaction = transactionBuilder.build();
