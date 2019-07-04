@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive",
-    "start": "node bin/server.js"
+    "start": "node bin/server.js",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "license": "MIT",
   "devDependencies": {
@@ -33,6 +35,8 @@
     "q": "1.4.1",
     "superagent": "^1.4.0",
     "superagent-as-promised": "3.2.0",
-    "validator": "4.0.2"
-  }
+    "validator": "4.0.2",
+    "snyk": "^1.189.0"
+  },
+  "snyk": true
 }
