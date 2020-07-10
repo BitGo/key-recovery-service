@@ -21,7 +21,7 @@
     "bitcoinjs-message": "2.0.0",
     "body-parser": "1.13.2",
     "express": "4.13.1",
-    "lodash": "3.10.0",
+    "lodash": "4.17.16",
     "moment": "2.10.6",
     "mongoose": "4.0.5",
     "mongoose-q": "0.0.17",
